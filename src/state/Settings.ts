@@ -6,6 +6,7 @@ import { SCHEMA as ShaderSchema } from '../visual/presets/ShaderPlane';
 import { SCHEMA as LightRaysSchema } from '../visual/presets/LightRays';
 import { SCHEMA as PipesSchema } from '../visual/presets/Pipes';
 import { SCHEMA as BubblesSchema } from '../visual/presets/Bubbles';
+import { SCHEMA as GeoWarsSchema } from '../visual/presets/GeoWars';
 
 export interface AudioSettings {
   gain: number;
@@ -50,6 +51,7 @@ export function defaultPresetParams(): Record<string, PresetParams> {
     lightrays: defaultsFromSchema(LightRaysSchema),
     pipes: defaultsFromSchema(PipesSchema),
     bubbles: defaultsFromSchema(BubblesSchema),
+    geowars: defaultsFromSchema(GeoWarsSchema),
   };
 }
 

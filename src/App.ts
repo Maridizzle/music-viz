@@ -14,6 +14,7 @@ import { ShaderPlane } from './visual/presets/ShaderPlane';
 import { LightRays } from './visual/presets/LightRays';
 import { Pipes } from './visual/presets/Pipes';
 import { Bubbles } from './visual/presets/Bubbles';
+import { GeoWars } from './visual/presets/GeoWars';
 
 function describeError(e: unknown): string {
   if (e instanceof Error) {
@@ -76,6 +77,7 @@ export class App {
       new LightRays(),
       new Pipes(),
       new Bubbles(),
+      new GeoWars(),
     ]) {
       this.manager.register(preset);
     }

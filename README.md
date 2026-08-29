@@ -23,11 +23,12 @@ so the visualizer reacts to one of three sources you pick in-app:
 
 ## Presets & controls
 
-Seven switchable 3D presets: **Ico Blob** (audio‑displaced icosahedron),
+Eight switchable 3D presets: **Ico Blob** (audio‑displaced icosahedron),
 **Particle Field** (GPU point cloud), **Radial Bars** (circular equalizer),
 **Shader Plane** (fullscreen fragment‑shader patterns), **Light Rays** (radial
-god‑rays), **Pipes** (glowing 3D tube tangle), and **Bubbles** (rising translucent
-spheres that pop on the beat).
+god‑rays), **Pipes** (self‑drawing 3D pipes whose draw‑speed and thickness ride the
+music), **Bubbles** (rising translucent spheres that pop on the beat), and
+**Geo Wars** (neon line‑triangles dancing to the spectrum, WMP‑style).
 
 The ⚙️ panel adjusts everything live and remembers it (localStorage):
 
