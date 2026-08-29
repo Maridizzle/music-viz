@@ -23,16 +23,19 @@ so the visualizer reacts to one of three sources you pick in-app:
 
 ## Presets & controls
 
-Four switchable 3D presets: **Ico Blob** (audio‑displaced icosahedron),
-**Particle Field** (GPU point cloud), **Radial Bars** (circular equalizer), and
-**Shader Plane** (fullscreen fragment‑shader patterns).
+Seven switchable 3D presets: **Ico Blob** (audio‑displaced icosahedron),
+**Particle Field** (GPU point cloud), **Radial Bars** (circular equalizer),
+**Shader Plane** (fullscreen fragment‑shader patterns), **Light Rays** (radial
+god‑rays), **Pipes** (glowing 3D tube tangle), and **Bubbles** (rising translucent
+spheres that pop on the beat).
 
 The ⚙️ panel adjusts everything live and remembers it (localStorage):
 
 - **Audio** — sensitivity, smoothing, FFT resolution, per‑band (bass/mid/treble)
   emphasis, beat sensitivity.
-- **Visual** — preset, colour palette, hue/saturation, background, bloom, and a
-  render‑scale slider for performance.
+- **Visual** — preset, colour palette, hue/saturation, **RGB rotate** (auto‑cycle
+  colours through the spectrum) + speed, background, bloom, and a render‑scale
+  slider for performance.
 - **Per‑preset** parameters, generated automatically from each preset.
 
 Plus a fullscreen button, wake‑lock (keeps the screen on while playing), and a

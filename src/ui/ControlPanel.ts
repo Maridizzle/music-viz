@@ -77,6 +77,8 @@ export class ControlPanel {
     visual.addBinding(this.settings.visual, 'palette', { label: 'Palette', options: toOptions(paletteNames()) });
     visual.addBinding(this.settings.visual, 'hue', { label: 'Hue shift', min: 0, max: 1, step: 0.005 });
     visual.addBinding(this.settings.visual, 'saturation', { label: 'Saturation', min: 0, max: 2, step: 0.01 });
+    visual.addBinding(this.settings.visual, 'rgbRotate', { label: 'RGB rotate' });
+    visual.addBinding(this.settings.visual, 'rgbSpeed', { label: 'RGB speed', min: 0, max: 1, step: 0.005 });
     visual.addBinding(this.settings.visual, 'background', { label: 'Background' });
     visual.addBinding(this.settings.visual, 'bloom', { label: 'Bloom' });
     visual.addBinding(this.settings.visual, 'bloomStrength', { label: 'Bloom strength', min: 0, max: 3, step: 0.01 });

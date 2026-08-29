@@ -3,6 +3,9 @@ import { SCHEMA as IcoBlobSchema } from '../visual/presets/IcoBlob';
 import { SCHEMA as ParticleSchema } from '../visual/presets/ParticleField';
 import { SCHEMA as RadialSchema } from '../visual/presets/RadialBars';
 import { SCHEMA as ShaderSchema } from '../visual/presets/ShaderPlane';
+import { SCHEMA as LightRaysSchema } from '../visual/presets/LightRays';
+import { SCHEMA as PipesSchema } from '../visual/presets/Pipes';
+import { SCHEMA as BubblesSchema } from '../visual/presets/Bubbles';
 
 export interface AudioSettings {
   gain: number;
@@ -25,6 +28,8 @@ export interface VisualSettings {
   bloomRadius: number;
   bloomThreshold: number;
   resolution: number; // devicePixelRatio cap
+  rgbRotate: boolean; // auto-cycle colours through the spectrum
+  rgbSpeed: number; // hue cycles per second
 }
 
 export interface Settings {
@@ -42,6 +47,9 @@ export function defaultPresetParams(): Record<string, PresetParams> {
     particles: defaultsFromSchema(ParticleSchema),
     radialbars: defaultsFromSchema(RadialSchema),
     shaderplane: defaultsFromSchema(ShaderSchema),
+    lightrays: defaultsFromSchema(LightRaysSchema),
+    pipes: defaultsFromSchema(PipesSchema),
+    bubbles: defaultsFromSchema(BubblesSchema),
   };
 }
 
@@ -69,6 +77,8 @@ export function defaultSettings(): Settings {
       bloomRadius: 0.6,
       bloomThreshold: 0.82,
       resolution: mobile ? 1.5 : 2,
+      rgbRotate: false,
+      rgbSpeed: 0.1,
     },
     presetParams: defaultPresetParams(),
   };

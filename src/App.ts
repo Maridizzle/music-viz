@@ -11,6 +11,9 @@ import { IcoBlob } from './visual/presets/IcoBlob';
 import { ParticleField } from './visual/presets/ParticleField';
 import { RadialBars } from './visual/presets/RadialBars';
 import { ShaderPlane } from './visual/presets/ShaderPlane';
+import { LightRays } from './visual/presets/LightRays';
+import { Pipes } from './visual/presets/Pipes';
+import { Bubbles } from './visual/presets/Bubbles';
 
 function describeError(e: unknown): string {
   if (e instanceof Error) {
@@ -44,6 +47,7 @@ export class App {
   private wakeLock: WakeLockSentinel | null = null;
   private fpsAccum = 0;
   private fpsFrames = 0;
+  private huePhase = 0;
 
   constructor(private readonly root: HTMLElement) {
     this.settings = loadSettings();
@@ -64,7 +68,15 @@ export class App {
     };
 
     this.manager = new PresetManager(root, width, height, dpr);
-    for (const preset of [new IcoBlob(), new ParticleField(), new RadialBars(), new ShaderPlane()]) {
+    for (const preset of [
+      new IcoBlob(),
+      new ParticleField(),
+      new RadialBars(),
+      new ShaderPlane(),
+      new LightRays(),
+      new Pipes(),
+      new Bubbles(),
+    ]) {
       this.manager.register(preset);
     }
     let pid = this.settings.visual.preset;
@@ -152,6 +164,12 @@ export class App {
 
   private frame(dt: number, t: number): void {
     const frame = this.engine.update();
+
+    if (this.settings.visual.rgbRotate) {
+      this.huePhase = (this.huePhase + dt * this.settings.visual.rgbSpeed) % 1;
+      this.manager.setHue((this.settings.visual.hue + this.huePhase) % 1);
+    }
+
     this.manager.render(frame, dt, t);
 
     this.panel.readouts.bpm = frame.bpm;

@@ -92,6 +92,11 @@ export class PresetManager {
     this.style.saturation = saturation;
   }
 
+  /** Update only the hue (cheap; safe to call every frame for RGB rotation). */
+  setHue(hue: number): void {
+    this.style.hue = hue;
+  }
+
   setBackground(color: string): void {
     this.bg.set(color);
   }
