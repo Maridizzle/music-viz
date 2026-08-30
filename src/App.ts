@@ -59,6 +59,7 @@ export class App {
   private fpsAccum = 0;
   private fpsFrames = 0;
   private huePhase = 0;
+  private lastFrame: { bass: number; mid: number; treble: number; level: number; beat: boolean } | null = null;
 
   constructor(private readonly root: HTMLElement) {
     this.settings = loadSettings();
@@ -154,6 +155,14 @@ export class App {
     saveSettings(this.settings);
   }
 
+  /** Debug/test hooks (only reachable via the ?debug window handle). */
+  debugMetrics(): { bass: number; mid: number; treble: number; level: number; beat: boolean } | null {
+    return this.lastFrame;
+  }
+  debugConnect(kind: 'mic' | 'display' | 'file' | 'url', arg?: File | string): Promise<void> {
+    return this.connect(kind, arg);
+  }
+
   // ---- source connection ----
 
   private async connect(kind: 'mic' | 'display' | 'file' | 'url', arg?: File | string): Promise<void> {
@@ -186,6 +195,7 @@ export class App {
 
   private frame(dt: number, t: number): void {
     const frame = this.engine.update();
+    this.lastFrame = { bass: frame.bass, mid: frame.mid, treble: frame.treble, level: frame.level, beat: frame.beat };
 
     if (this.settings.visual.rgbRotate) {
       this.huePhase = (this.huePhase + dt * this.settings.visual.rgbSpeed) % 1;

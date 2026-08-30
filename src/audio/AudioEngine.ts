@@ -36,6 +36,7 @@ export class AudioEngine {
   readonly analyser: AnalyserNode;
 
   private readonly inputGain: GainNode;
+  private readonly keepAlive: GainNode;
   private input: AudioNode | null = null;
   private stream: MediaStream | null = null;
   private el: HTMLAudioElement | null = null;
@@ -72,6 +73,16 @@ export class AudioEngine {
     this.inputGain = this.context.createGain();
     this.inputGain.gain.value = c.gain;
     this.inputGain.connect(this.analyser);
+
+    // Web Audio only processes nodes that have a path to the destination. An
+    // analyser that is a dead end (e.g. mic -> gain -> analyser, not routed to the
+    // speakers) is never pulled and reads pure silence. Route the analyser to the
+    // destination through a MUTED gain so the graph is always processed without
+    // producing any sound.
+    this.keepAlive = this.context.createGain();
+    this.keepAlive.gain.value = 0;
+    this.analyser.connect(this.keepAlive);
+    this.keepAlive.connect(this.context.destination);
 
     this.freq = new Uint8Array(this.analyser.frequencyBinCount);
     this.time = new Uint8Array(this.analyser.fftSize);
