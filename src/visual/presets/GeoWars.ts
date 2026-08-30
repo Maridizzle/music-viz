@@ -3,16 +3,16 @@ import type { AudioFrame } from '../../audio/types';
 import { num, type ParamSchema, type Preset, type PresetContext, type PresetParams } from '../Preset';
 
 export const SCHEMA: ParamSchema = [
-  { key: 'triangleCount', label: 'Triangles', type: 'range', min: 12, max: 120, step: 1, default: 60 },
+  { key: 'triangleCount', label: 'Links', type: 'range', min: 8, max: 90, step: 1, default: 32 },
   { key: 'flowSpeed', label: 'Flow speed', type: 'range', min: 0.05, max: 1, step: 0.01, default: 0.22 },
   { key: 'spin', label: 'Spin', type: 'range', min: 0, max: 3, step: 0.01, default: 0.6 },
-  { key: 'spiral', label: 'Spiral', type: 'range', min: 0, max: 8, step: 0.05, default: 3 },
+  { key: 'spiral', label: 'Spiral', type: 'range', min: 0, max: 8, step: 0.05, default: 0.9 },
   { key: 'reactivity', label: 'Reactivity', type: 'range', min: 0, max: 3, step: 0.01, default: 1.6 },
 ];
 
 const TWO_PI = Math.PI * 2;
-const FAR = -16;
-const NEAR = 6; // in front of the camera (z≈3.8) so triangles pass through the viewer
+const FAR = -13;
+const NEAR = 5; // in front of the camera (z≈3.8) so triangles pass through the viewer
 
 /** A rotating tunnel of neon triangles flowing toward and through the camera — the classic screensaver. */
 export class GeoWars implements Preset {
@@ -68,7 +68,7 @@ export class GeoWars implements Preset {
       this.loops.push(loop);
       this.group.add(loop);
       this.depth[i] = i / count; // evenly spaced down the tunnel
-      this.sizeVar[i] = 0.8 + Math.random() * 0.5;
+      this.sizeVar[i] = 0.72 + Math.random() * 0.12;
     }
     this.count = count;
   }
@@ -95,7 +95,11 @@ export class GeoWars implements Preset {
 
       const loop = this.loops[i]!;
       loop.position.z = FAR + d * (NEAR - FAR);
-      loop.rotation.z = d * spiral * TWO_PI + this.spinPhase;
+      // Interlock like chain links: alternate links sit edge-on / face-on so each
+      // triangle threads THROUGH its neighbours instead of nesting flat.
+      const flip = (i % 2) * (Math.PI / 2);
+      const twist = d * spiral * TWO_PI + this.spinPhase;
+      loop.rotation.set(flip, flip * 0.6, twist);
       loop.scale.setScalar(this.sizeVar[i]! * pulse);
 
       const fadeIn = Math.min(1, d / 0.12);
