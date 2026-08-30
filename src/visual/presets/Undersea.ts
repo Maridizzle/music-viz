@@ -26,18 +26,19 @@ void main(){
   // god-ray shafts from the surface
   vec2 p = uv - vec2(0.5, 1.15);
   float ang = atan(p.x, -p.y);
-  float sway = sin(uTime*0.3 + uBass*3.0)*0.15*uSway;
+  float sway = sin(uTime*0.3 + uBass*4.0)*(0.18 + uBeat*0.15)*uSway;
   float rays = 0.5 + 0.5*sin(ang*16.0 + sway*8.0 + uTime*0.25);
   rays = pow(rays, 3.0);
-  float godray = rays * smoothstep(1.0,0.1,uv.y) * (0.12 + uTreble*0.5 + uBeat*0.4) * uGod;
+  float godray = rays * smoothstep(1.0,0.1,uv.y) * (0.10 + uTreble*0.7 + uBeat*0.7) * uGod;
 
-  // caustic shimmer
-  float c = snoise(vec3(uv*6.0, uTime*0.4));
-  c += 0.5*snoise(vec3(uv*13.0 + 4.0, uTime*0.7));
-  float caustic = smoothstep(0.55,0.95,c) * (0.12 + uMid*0.5) * smoothstep(0.0,0.7,uv.y) * uCaust;
+  // caustic shimmer (speeds up with treble)
+  float ct = uTime*(0.4 + uTreble*0.6);
+  float c = snoise(vec3(uv*6.0, ct));
+  c += 0.5*snoise(vec3(uv*13.0 + 4.0, ct*1.7));
+  float caustic = smoothstep(0.5,0.92,c) * (0.12 + uMid*0.7) * smoothstep(0.0,0.7,uv.y) * uCaust;
 
   vec3 col = water + vec3(0.45,0.85,0.95)*godray + vec3(0.55,0.95,1.0)*caustic;
-  col *= 0.7 + uLevel*0.6;
+  col *= 0.6 + uLevel*0.9 + uBeat*0.3;
   gl_FragColor = vec4(col,1.0);
 }
 `;

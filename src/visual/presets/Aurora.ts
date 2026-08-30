@@ -21,12 +21,13 @@ void main(){
   vec2 uv=vUv;
   float x=uv.x;
   float wav=uWav;
-  float base=0.32
+  float base=0.34
     + snoise(vec3(x*3.0, uTime*0.15, 0.0))*0.16*wav
-    + snoise(vec3(x*7.0+5.0, uTime*0.25, 1.0))*0.09*wav;
+    + snoise(vec3(x*7.0+5.0, uTime*0.25, 1.0))*0.09*wav
+    - uBass*0.16 - uBeat*0.08;                       // bass/beats surge the curtains upward
   float band=smoothstep(0.0,0.45,uv.y-base)*smoothstep(1.0,0.45,uv.y);
-  float ripple=0.5+0.5*sin(x*38.0 + uTime*1.4 + snoise(vec3(x*10.0,uTime*0.5,2.0))*5.0);
-  float intensity=band*ripple*(0.35+uMid*0.9*uReact+uBeat*0.5)*uInt;
+  float ripple=0.5+0.5*sin(x*38.0 + uTime*1.4*(1.0+uTreble*1.8) + snoise(vec3(x*10.0,uTime*0.5,2.0))*5.0);
+  float intensity=band*ripple*(0.28+uMid*1.15*uReact+uBeat*0.9+uBass*0.4)*uInt;
   float h=clamp((uv.y-base)/0.5,0.0,1.0);
   vec3 c1=vec3(0.10,0.95,0.45), c2=vec3(0.10,0.70,0.95), c3=vec3(0.65,0.20,0.95);
   vec3 aur=mix(c1,mix(c2,c3,h),h);

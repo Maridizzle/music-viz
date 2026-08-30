@@ -212,14 +212,16 @@ export class AudioEngine {
   private agcTime = 0;
 
   private normalize(key: 'level' | 'bass' | 'mid' | 'treble', raw: number, dt: number): number {
-    const NOISE = 0.02;
-    const MIN_PEAK = 0.05;
-    const DECAY = 0.6; // peak eases back toward 0 over ~1.6s so quieter passages still register
+    const NOISE = 0.015;
+    const MIN_PEAK = 0.045;
+    const DECAY = 1.1; // adapts quickly so quiet-after-loud still swings the full range
     let p = this.peaks[key];
     p = Math.max(raw, p - p * DECAY * dt, MIN_PEAK);
     this.peaks[key] = p;
-    const n = (raw - NOISE) / Math.max(0.01, p - NOISE);
-    return n < 0 ? 0 : n > 1 ? 1 : n;
+    let n = (raw - NOISE) / Math.max(0.01, p - NOISE);
+    n = n < 0 ? 0 : n > 1 ? 1 : n;
+    // "punch" curve: lifts moderate signal so the visuals spend more time reacting
+    return Math.pow(n, 0.6);
   }
 
   /** Read the analyser and derive metrics for this frame. Allocation-free. */
@@ -245,7 +247,8 @@ export class AudioEngine {
     const beatInput = bassRaw * 0.7 + midRaw * 0.3;
     const beat = this.beatDetector.update(beatInput, nowMs);
     f.beat = beat.beat;
-    f.beatEnergy = beat.energy;
+    // every detected beat delivers a strong pulse so beat-driven effects really hit
+    f.beatEnergy = beat.beat ? Math.max(0.65, beat.energy) : beat.energy;
     f.bpm = beat.bpm;
 
     if (bassRaw + midRaw + trebRaw < 0.001) this.silentFrames++;

@@ -24,9 +24,9 @@ void main(){
   gl_Position = projectionMatrix*mv;
   float twinkle = 0.55 + 0.45*sin(uTime*3.0 + aSeed*6.2831)*(0.5+uTreble);
   float core = smoothstep(0.28,0.0,aT);
-  float sz = (1.0 + core*4.0) * (0.7 + uLevel*1.6*uReact + uBeat*1.2);
-  gl_PointSize = clamp(sz * (18.0/max(0.1,-mv.z)) * twinkle, 1.0, 26.0);
-  vColor = grad4(aT) * (0.7 + core*1.6 + uLevel*0.6);
+  float sz = (1.0 + core*4.0) * (0.55 + uLevel*2.3*uReact + uBeat*1.9);
+  gl_PointSize = clamp(sz * (18.0/max(0.1,-mv.z)) * twinkle, 1.0, 30.0);
+  vColor = grad4(aT) * (0.7 + core*1.6 + uLevel*1.0 + uBeat*0.6);
   vColor += vec3(1.0,0.85,0.6)*core*0.6; // warm core
   vA = twinkle;
 }
@@ -116,7 +116,7 @@ export class Nebula implements Preset {
     u.uTreble!.value = frame.treble;
     u.uReact!.value = num(params, 'reactivity', 1.5);
     for (let i = 0; i < 4; i++) this.ctx.style.sample(i / 3, this.pal[i]!);
-    this.group.rotation.z += dt * num(params, 'rotation', 0.18) * (0.5 + frame.bass * 1.5);
+    this.group.rotation.z += dt * num(params, 'rotation', 0.18) * (0.4 + frame.bass * 3.0);
   }
 
   resize(): void { /* in-shader sizing */ }

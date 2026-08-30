@@ -50,7 +50,7 @@ export interface Settings {
   presetParams: Record<string, PresetParams>;
 }
 
-export const SETTINGS_VERSION = 1;
+export const SETTINGS_VERSION = 2;
 
 export function defaultPresetParams(): Record<string, PresetParams> {
   return {
@@ -80,13 +80,13 @@ export function defaultSettings(): Settings {
   return {
     version: SETTINGS_VERSION,
     audio: {
-      gain: 1,
-      smoothing: 0.8,
+      gain: 1.15,
+      smoothing: 0.55,
       fftSize: 2048,
       emphasisBass: 1,
       emphasisMid: 1,
       emphasisTreble: 1,
-      beatSensitivity: 1.4,
+      beatSensitivity: 1.2,
     },
     visual: {
       preset: 'icoblob',

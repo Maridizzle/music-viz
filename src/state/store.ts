@@ -14,9 +14,12 @@ export function loadSettings(): Settings {
   if (!raw) return base;
   try {
     const saved = JSON.parse(raw) as Partial<Settings>;
+    // On a version bump, reset the audio tuning to the new (snappier) defaults but
+    // keep the user's visual choices and per-preset params.
+    const audio = saved.version === SETTINGS_VERSION ? { ...base.audio, ...saved.audio } : base.audio;
     return {
       version: SETTINGS_VERSION,
-      audio: { ...base.audio, ...saved.audio },
+      audio,
       visual: { ...base.visual, ...saved.visual },
       presetParams: mergePresetParams(base.presetParams, saved.presetParams),
     };

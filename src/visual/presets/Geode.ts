@@ -114,6 +114,7 @@ export class Geode implements Preset {
 
     this.group.rotation.y += dt * num(params, 'rotation', 0.15);
     this.group.rotation.x += dt * num(params, 'rotation', 0.15) * 0.3;
+    this.group.scale.setScalar(1 + this.beatPulse * 0.12 + frame.bass * 0.06);
   }
 
   resize(): void {
