@@ -16,6 +16,14 @@ export function averageBand(freq: Uint8Array, startBin: number, endBin: number):
   return sum / (hi - lo + 1) / 255;
 }
 
+/** Map t in [0,1] to a log-spaced frequency bin index (bass-fair spectrum mapping). */
+export function logBin(t: number, binCount: number): number {
+  const minBin = 2;
+  const usable = Math.max(minBin + 1, Math.floor(binCount * 0.75));
+  const bin = Math.floor(minBin * Math.pow(usable / minBin, Math.max(0, Math.min(1, t))));
+  return Math.max(0, Math.min(binCount - 1, bin));
+}
+
 /** RMS of the time-domain buffer, normalised to ~0..1. */
 export function rmsLevel(time: Uint8Array): number {
   let sum = 0;

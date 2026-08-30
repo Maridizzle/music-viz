@@ -206,9 +206,27 @@ export class AudioEngine {
   /** True once the analyser has been reading a non-zero signal recently. */
   private silentFrames = 0;
 
+  // Adaptive auto-gain: normalise each metric against its own recent peak so the
+  // visuals use the full 0..1 range and track the music's dynamics on any source.
+  private peaks = { level: 0.05, bass: 0.05, mid: 0.05, treble: 0.05 };
+  private agcTime = 0;
+
+  private normalize(key: 'level' | 'bass' | 'mid' | 'treble', raw: number, dt: number): number {
+    const NOISE = 0.02;
+    const MIN_PEAK = 0.05;
+    const DECAY = 0.6; // peak eases back toward 0 over ~1.6s so quieter passages still register
+    let p = this.peaks[key];
+    p = Math.max(raw, p - p * DECAY * dt, MIN_PEAK);
+    this.peaks[key] = p;
+    const n = (raw - NOISE) / Math.max(0.01, p - NOISE);
+    return n < 0 ? 0 : n > 1 ? 1 : n;
+  }
+
   /** Read the analyser and derive metrics for this frame. Allocation-free. */
   update(): AudioFrame {
     const nowMs = performance.now();
+    const dt = this.agcTime ? Math.min(0.1, (nowMs - this.agcTime) / 1000) : 0.016;
+    this.agcTime = nowMs;
     this.analyser.getByteFrequencyData(this.freq);
     this.analyser.getByteTimeDomainData(this.time);
 
@@ -216,12 +234,13 @@ export class AudioEngine {
     const bassRaw = averageBand(this.freq, b.bassStart, b.bassEnd);
     const midRaw = averageBand(this.freq, b.midStart, b.midEnd);
     const trebRaw = averageBand(this.freq, b.trebStart, b.trebEnd);
+    const levelRaw = rmsLevel(this.time);
 
     const f = this.frame;
-    f.bass = Math.min(1, bassRaw * this.emphasis.bass);
-    f.mid = Math.min(1, midRaw * this.emphasis.mid);
-    f.treble = Math.min(1, trebRaw * this.emphasis.treble);
-    f.level = Math.min(1, rmsLevel(this.time) * 1.6);
+    f.bass = Math.min(1, this.normalize('bass', bassRaw, dt) * this.emphasis.bass);
+    f.mid = Math.min(1, this.normalize('mid', midRaw, dt) * this.emphasis.mid);
+    f.treble = Math.min(1, this.normalize('treble', trebRaw, dt) * this.emphasis.treble);
+    f.level = this.normalize('level', levelRaw, dt);
 
     const beatInput = bassRaw * 0.7 + midRaw * 0.3;
     const beat = this.beatDetector.update(beatInput, nowMs);

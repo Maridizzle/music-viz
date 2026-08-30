@@ -27,8 +27,13 @@ Eight switchable 3D presets: **Ico Blob** (audio‑displaced icosahedron),
 **Particle Field** (GPU point cloud), **Radial Bars** (circular equalizer),
 **Shader Plane** (fullscreen fragment‑shader patterns), **Light Rays** (radial
 god‑rays), **Pipes** (self‑drawing 3D pipes whose draw‑speed and thickness ride the
-music), **Bubbles** (rising translucent spheres that pop on the beat), and
-**Geo Wars** (neon line‑triangles dancing to the spectrum, WMP‑style).
+music), **Bubbles** (rising translucent spheres that each dance to their own
+frequency band and pop on the beat), and **Geo Wars** (a rotating tunnel of neon
+triangles flowing toward and through the screen, old‑Windows‑screensaver style).
+
+An adaptive **auto‑gain** stage normalizes the bass/mid/treble/level metrics against
+the track's own recent dynamics, so every preset uses the full range and stays
+responsive on quiet or loud sources alike.
 
 The ⚙️ panel adjusts everything live and remembers it (localStorage):
 
