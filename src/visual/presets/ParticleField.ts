@@ -33,8 +33,8 @@ void main(){
   vec3 pos = position * uSpread + dir * (n * (0.4 + uBass * 1.6) + burst);
   vec4 mv = modelViewMatrix * vec4(pos, 1.0);
   gl_Position = projectionMatrix * mv;
-  float atten = 320.0 / max(0.1, -mv.z);
-  gl_PointSize = uSize * atten * (0.5 + uLevel * 1.4 + uBeat * 0.6);
+  float atten = 26.0 / max(0.1, -mv.z);
+  gl_PointSize = clamp(uSize * atten * (0.5 + uLevel * 1.4 + uBeat * 0.6), 1.0, 22.0);
   vColor = grad4(aT) * (0.6 + uLevel * 1.1 + n * 0.3);
   vFade = 0.4 + 0.6 * clamp(radius, 0.0, 1.0);
 }

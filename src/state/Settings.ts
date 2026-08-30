@@ -7,6 +7,16 @@ import { SCHEMA as LightRaysSchema } from '../visual/presets/LightRays';
 import { SCHEMA as PipesSchema } from '../visual/presets/Pipes';
 import { SCHEMA as BubblesSchema } from '../visual/presets/Bubbles';
 import { SCHEMA as GeoWarsSchema } from '../visual/presets/GeoWars';
+import { SCHEMA as PrismSchema } from '../visual/presets/Prism';
+import { SCHEMA as GeodeSchema } from '../visual/presets/Geode';
+import { SCHEMA as UnderseaSchema } from '../visual/presets/Undersea';
+import { SCHEMA as NebulaSchema } from '../visual/presets/Nebula';
+import { SCHEMA as SynthwaveSchema } from '../visual/presets/Synthwave';
+import { SCHEMA as TerrainSchema } from '../visual/presets/Terrain';
+import { SCHEMA as KaleidoscopeSchema } from '../visual/presets/Kaleidoscope';
+import { SCHEMA as AuroraSchema } from '../visual/presets/Aurora';
+import { SCHEMA as FireworksSchema } from '../visual/presets/Fireworks';
+import { SCHEMA as TeslaSchema } from '../visual/presets/Tesla';
 
 export interface AudioSettings {
   gain: number;
@@ -52,6 +62,16 @@ export function defaultPresetParams(): Record<string, PresetParams> {
     pipes: defaultsFromSchema(PipesSchema),
     bubbles: defaultsFromSchema(BubblesSchema),
     geowars: defaultsFromSchema(GeoWarsSchema),
+    prism: defaultsFromSchema(PrismSchema),
+    geode: defaultsFromSchema(GeodeSchema),
+    undersea: defaultsFromSchema(UnderseaSchema),
+    nebula: defaultsFromSchema(NebulaSchema),
+    synthwave: defaultsFromSchema(SynthwaveSchema),
+    terrain: defaultsFromSchema(TerrainSchema),
+    kaleidoscope: defaultsFromSchema(KaleidoscopeSchema),
+    aurora: defaultsFromSchema(AuroraSchema),
+    fireworks: defaultsFromSchema(FireworksSchema),
+    tesla: defaultsFromSchema(TeslaSchema),
   };
 }
 

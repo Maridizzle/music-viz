@@ -23,13 +23,26 @@ so the visualizer reacts to one of three sources you pick in-app:
 
 ## Presets & controls
 
-Eight switchable 3D presets: **Ico Blob** (audio‑displaced icosahedron),
-**Particle Field** (GPU point cloud), **Radial Bars** (circular equalizer),
-**Shader Plane** (fullscreen fragment‑shader patterns), **Light Rays** (radial
-god‑rays), **Pipes** (self‑drawing 3D pipes whose draw‑speed and thickness ride the
-music), **Bubbles** (rising translucent spheres that each dance to their own
-frequency band and pop on the beat), and **Geo Wars** (a rotating tunnel of neon
-triangles flowing toward and through the screen, old‑Windows‑screensaver style).
+Eighteen switchable 3D presets:
+
+- **Ico Blob** — audio‑displaced icosahedron
+- **Particle Field** — GPU point cloud
+- **Radial Bars** — circular equalizer
+- **Shader Plane** — fullscreen fragment‑shader patterns
+- **Light Rays** — radial god‑rays
+- **Pipes** — self‑drawing 3D pipes whose draw‑speed and thickness ride the music
+- **Bubbles** — translucent spheres, each dancing to its own frequency band
+- **Geo Wars** — interlocking neon triangles flowing through a tunnel
+- **Prism** — a glass prism splitting a beam into a reactive rainbow spectrum
+- **Geode** — a radiating crystal cluster that grows and glints to the spectrum
+- **Undersea** — god‑ray shafts, caustics and drifting plankton
+- **Nebula** — a spiral galaxy of stars with a glowing core
+- **Synthwave** — Outrun sunset, retro sun and a scrolling neon grid
+- **Audio Terrain** — a wireframe mountain range that is the live spectrum
+- **Kaleidoscope** — mirrored, symmetric shifting mandalas
+- **Aurora** — flowing northern‑lights curtains
+- **Fireworks** — particle bursts launched on beats
+- **Tesla** — lightning arcs crackling from a core
 
 An adaptive **auto‑gain** stage normalizes the bass/mid/treble/level metrics against
 the track's own recent dynamics, so every preset uses the full range and stays

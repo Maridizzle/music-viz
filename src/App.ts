@@ -15,6 +15,16 @@ import { LightRays } from './visual/presets/LightRays';
 import { Pipes } from './visual/presets/Pipes';
 import { Bubbles } from './visual/presets/Bubbles';
 import { GeoWars } from './visual/presets/GeoWars';
+import { Prism } from './visual/presets/Prism';
+import { Geode } from './visual/presets/Geode';
+import { Undersea } from './visual/presets/Undersea';
+import { Nebula } from './visual/presets/Nebula';
+import { Synthwave } from './visual/presets/Synthwave';
+import { Terrain } from './visual/presets/Terrain';
+import { Kaleidoscope } from './visual/presets/Kaleidoscope';
+import { Aurora } from './visual/presets/Aurora';
+import { Fireworks } from './visual/presets/Fireworks';
+import { Tesla } from './visual/presets/Tesla';
 
 function describeError(e: unknown): string {
   if (e instanceof Error) {
@@ -78,6 +88,16 @@ export class App {
       new Pipes(),
       new Bubbles(),
       new GeoWars(),
+      new Prism(),
+      new Geode(),
+      new Undersea(),
+      new Nebula(),
+      new Synthwave(),
+      new Terrain(),
+      new Kaleidoscope(),
+      new Aurora(),
+      new Fireworks(),
+      new Tesla(),
     ]) {
       this.manager.register(preset);
     }
