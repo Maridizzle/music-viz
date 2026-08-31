@@ -23,7 +23,7 @@ so the visualizer reacts to one of three sources you pick in-app:
 
 ## Presets & controls
 
-Twenty-two switchable 3D presets:
+Twenty-six switchable 3D presets:
 
 - **Ico Blob** — audio‑displaced icosahedron
 - **Particle Field** — GPU point cloud
@@ -47,6 +47,10 @@ Twenty-two switchable 3D presets:
 - **Tropical Fish** — a school of fish swimming and darting on beats
 - **Dancing Fruits** — a row of fruit each bouncing to its own frequency band
 - **Dancing Lasers** — a concert laser rig sweeping, fanning and strobing
+- **Matrix Rain** — falling green code glyphs with bright leading heads
+- **Plasma Globe** — a glass sphere with electric tendrils wandering to its surface
+- **Piano Roll** — synthesia-style notes scrolling onto a light-up keyboard
+- **Guitar Hero** — a 5-lane note highway with gems flying at the screen
 
 An adaptive **auto‑gain** stage normalizes the bass/mid/treble/level metrics against
 the track's own recent dynamics, so every preset uses the full range and stays

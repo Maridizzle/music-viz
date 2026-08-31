@@ -21,6 +21,10 @@ import { SCHEMA as LavaLampSchema } from '../visual/presets/LavaLamp';
 import { SCHEMA as FishSchema } from '../visual/presets/TropicalFish';
 import { SCHEMA as FruitsSchema } from '../visual/presets/DancingFruits';
 import { SCHEMA as LasersSchema } from '../visual/presets/Lasers';
+import { SCHEMA as MatrixSchema } from '../visual/presets/Matrix';
+import { SCHEMA as PlasmaSchema } from '../visual/presets/PlasmaGlobe';
+import { SCHEMA as PianoSchema } from '../visual/presets/PianoRoll';
+import { SCHEMA as GuitarSchema } from '../visual/presets/GuitarHero';
 
 export interface AudioSettings {
   gain: number;
@@ -80,6 +84,10 @@ export function defaultPresetParams(): Record<string, PresetParams> {
     fish: defaultsFromSchema(FishSchema),
     fruits: defaultsFromSchema(FruitsSchema),
     lasers: defaultsFromSchema(LasersSchema),
+    matrix: defaultsFromSchema(MatrixSchema),
+    plasmaglobe: defaultsFromSchema(PlasmaSchema),
+    pianoroll: defaultsFromSchema(PianoSchema),
+    guitarhero: defaultsFromSchema(GuitarSchema),
   };
 }
 

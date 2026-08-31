@@ -29,6 +29,10 @@ import { LavaLamp } from './visual/presets/LavaLamp';
 import { TropicalFish } from './visual/presets/TropicalFish';
 import { DancingFruits } from './visual/presets/DancingFruits';
 import { Lasers } from './visual/presets/Lasers';
+import { Matrix } from './visual/presets/Matrix';
+import { PlasmaGlobe } from './visual/presets/PlasmaGlobe';
+import { PianoRoll } from './visual/presets/PianoRoll';
+import { GuitarHero } from './visual/presets/GuitarHero';
 
 function describeError(e: unknown): string {
   if (e instanceof Error) {
@@ -107,6 +111,10 @@ export class App {
       new TropicalFish(),
       new DancingFruits(),
       new Lasers(),
+      new Matrix(),
+      new PlasmaGlobe(),
+      new PianoRoll(),
+      new GuitarHero(),
     ]) {
       this.manager.register(preset);
     }
