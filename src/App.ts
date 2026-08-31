@@ -25,6 +25,10 @@ import { Kaleidoscope } from './visual/presets/Kaleidoscope';
 import { Aurora } from './visual/presets/Aurora';
 import { Fireworks } from './visual/presets/Fireworks';
 import { Tesla } from './visual/presets/Tesla';
+import { LavaLamp } from './visual/presets/LavaLamp';
+import { TropicalFish } from './visual/presets/TropicalFish';
+import { DancingFruits } from './visual/presets/DancingFruits';
+import { Lasers } from './visual/presets/Lasers';
 
 function describeError(e: unknown): string {
   if (e instanceof Error) {
@@ -99,6 +103,10 @@ export class App {
       new Aurora(),
       new Fireworks(),
       new Tesla(),
+      new LavaLamp(),
+      new TropicalFish(),
+      new DancingFruits(),
+      new Lasers(),
     ]) {
       this.manager.register(preset);
     }

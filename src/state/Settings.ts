@@ -17,6 +17,10 @@ import { SCHEMA as KaleidoscopeSchema } from '../visual/presets/Kaleidoscope';
 import { SCHEMA as AuroraSchema } from '../visual/presets/Aurora';
 import { SCHEMA as FireworksSchema } from '../visual/presets/Fireworks';
 import { SCHEMA as TeslaSchema } from '../visual/presets/Tesla';
+import { SCHEMA as LavaLampSchema } from '../visual/presets/LavaLamp';
+import { SCHEMA as FishSchema } from '../visual/presets/TropicalFish';
+import { SCHEMA as FruitsSchema } from '../visual/presets/DancingFruits';
+import { SCHEMA as LasersSchema } from '../visual/presets/Lasers';
 
 export interface AudioSettings {
   gain: number;
@@ -72,6 +76,10 @@ export function defaultPresetParams(): Record<string, PresetParams> {
     aurora: defaultsFromSchema(AuroraSchema),
     fireworks: defaultsFromSchema(FireworksSchema),
     tesla: defaultsFromSchema(TeslaSchema),
+    lavalamp: defaultsFromSchema(LavaLampSchema),
+    fish: defaultsFromSchema(FishSchema),
+    fruits: defaultsFromSchema(FruitsSchema),
+    lasers: defaultsFromSchema(LasersSchema),
   };
 }
 
