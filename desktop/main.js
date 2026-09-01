@@ -69,6 +69,8 @@ function createVisualizerWindow(mode) {
     height: saver ? undefined : 800,
     backgroundColor: '#05060a',
     autoHideMenuBar: true,
+    skipTaskbar: saver,
+    alwaysOnTop: saver,
     title: 'Music Visualizer',
     icon: ICON,
     webPreferences: {
@@ -80,6 +82,13 @@ function createVisualizerWindow(mode) {
     },
   });
   winMode = mode;
+
+  if (saver) {
+    // Sit above everything — even always-on-top desktop widgets (pets, overlays).
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.setFullScreen(true);
+    win.focus();
+  }
 
   const ses = win.webContents.session;
   ses.setDisplayMediaRequestHandler(
@@ -139,13 +148,28 @@ function closeVisualizer() {
 // ---- idle watcher ----
 function startWatcher() {
   setInterval(() => {
-    const idle = powerMonitor.getSystemIdleTime(); // seconds since last input
+    let idle = 0;
+    try {
+      idle = powerMonitor.getSystemIdleTime(); // seconds since last input
+    } catch {
+      return; // don't let a transient failure stall the watcher
+    }
     if (winMode === 'saver') {
       if (idle < 2) closeVisualizer(); // the user came back
     } else if (!win && idle >= config.timeoutMinutes * 60) {
       activateSaver();
     }
     // interactive windows are never idle-dismissed
+
+    // Live tooltip so hovering the tray icon shows the countdown (and confirms the
+    // OS idle timer is being read).
+    if (tray) {
+      const tip =
+        winMode === 'saver' ? 'Music Visualizer — screensaver running'
+        : win ? 'Music Visualizer — window open'
+        : `Music Visualizer — screensaver in ${Math.max(0, Math.ceil(config.timeoutMinutes * 60 - idle))}s idle`;
+      tray.setToolTip(tip);
+    }
   }, 500);
 }
 
@@ -222,13 +246,13 @@ if (!app.requestSingleInstanceLock()) {
     startWatcher();
 
     if (firstRun) {
-      // First launch: show it once so the user sees it works, then it lives in the tray.
+      // First launch: just settle into the tray (do NOT open a window — an open window
+      // would pause the idle timer). A balloon explains where it went.
       saveConfig();
-      openInteractive();
       if (tray && tray.displayBalloon) {
         tray.displayBalloon({
-          title: 'Music Visualizer',
-          content: `Running in the tray. The screensaver starts after ${config.timeoutMinutes} min of inactivity — right-click the tray icon for options.`,
+          title: 'Music Visualizer is running',
+          content: `It's in the system tray (by the clock). The screensaver starts after ${config.timeoutMinutes} min of inactivity. Right-click the tray icon to change the timer, start it now, or start with Windows.`,
         });
       }
     }
