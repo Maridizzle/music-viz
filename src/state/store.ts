@@ -21,6 +21,7 @@ export function loadSettings(): Settings {
       version: SETTINGS_VERSION,
       audio,
       visual: { ...base.visual, ...saved.visual },
+      spotify: { ...base.spotify, ...saved.spotify },
       presetParams: mergePresetParams(base.presetParams, saved.presetParams),
     };
   } catch {

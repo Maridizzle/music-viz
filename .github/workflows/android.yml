@@ -1,0 +1,80 @@
+name: Build Android app
+
+# Builds the sideloadable Android APK (Capacitor shell around the web app).
+# - Run manually (Actions → Run workflow) to just build the artifact.
+# - Run manually with a "release_tag" (e.g. v0.3.0) to also attach the APK to that
+#   public GitHub Release (created if it doesn't exist yet).
+# - Pushing a v* tag does the same automatically.
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Attach the APK to a public Release with this tag (e.g. v0.3.0). Leave blank to build the artifact only.'
+        required: false
+        default: ''
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-36'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Web app with relative asset paths into dist-android, then copy it into the
+      # native project (and regenerate the plugin wiring).
+      - run: npm ci
+      - run: npm run build:android
+      - run: npx cap sync android
+
+      - name: Build signed release APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Collect APK
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p out
+          cp android/app/build/outputs/apk/release/app-release.apk "out/MusicVisualizer-${VERSION}.apk"
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MusicVisualizer-Android
+          path: out/*.apk
+          if-no-files-found: error
+
+      # Attach to the Release (the desktop workflow may already have created it for
+      # the same tag — softprops appends to an existing release).
+      - name: Publish Release
+        if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != '')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag) || github.ref_name }}
+          name: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag) || github.ref_name }}
+          files: out/*.apk
+          append_body: true
+          body: |
+
+            **Android:** download **MusicVisualizer-….apk** and open it on the phone (allow "install from this source" once). Needs Android 10+. Spotify mode works everywhere; the **System audio** source captures any app that allows it (Spotify and most DRM streaming apps block capture — use Spotify mode for those).

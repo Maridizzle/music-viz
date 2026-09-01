@@ -1,6 +1,11 @@
 import { AudioEngine } from './audio/AudioEngine';
+import { hasNativeCapture, startNativeCapture, type NativeCapture } from './audio/androidCapture';
 import { defaultSettings, type Settings } from './state/Settings';
 import { clearSettings, loadSettings, saveSettings } from './state/store';
+import { DEFAULT_SPOTIFY_CLIENT_ID } from './spotify/config';
+import { platformKind } from './spotify/platform';
+import { SpotifyMode } from './spotify/SpotifyMode';
+import type { SpotifyModeState, SpotifyTrack, TempoInfo } from './spotify/types';
 import { ControlPanel } from './ui/ControlPanel';
 import { UIShell } from './ui/overlay';
 import { hasDisplayMedia, hasFullscreen, hasWakeLock } from './util/env';
@@ -47,6 +52,17 @@ import { Vortex } from './visual/presets/Vortex';
 import { CitySkyline } from './visual/presets/CitySkyline';
 import { DNAHelix } from './visual/presets/DNAHelix';
 
+type SourceRequest = 'mic' | 'display' | 'file' | 'url' | 'spotify';
+
+interface FrameMetrics {
+  bass: number;
+  mid: number;
+  treble: number;
+  level: number;
+  beat: boolean;
+  bpm: number;
+}
+
 function describeError(e: unknown): string {
   if (e instanceof Error) {
     if (e.name === 'NotAllowedError') return 'Permission denied. Allow access and try again.';
@@ -61,6 +77,9 @@ function applyDefaultsInPlace(target: Settings): void {
   target.version = d.version;
   Object.assign(target.audio, d.audio);
   Object.assign(target.visual, d.visual);
+  const clientId = target.spotify.clientId; // configuration, not a preference — survives a reset
+  Object.assign(target.spotify, d.spotify);
+  target.spotify.clientId = clientId;
   for (const k of Object.keys(target.presetParams)) delete target.presetParams[k];
   Object.assign(target.presetParams, d.presetParams);
 }
@@ -73,16 +92,19 @@ export class App {
   private readonly panel: ControlPanel;
   private readonly loop: Loop;
   private readonly viewport: ViewportWatcher;
+  private readonly spotify: SpotifyMode;
 
   private started = false;
-  private readonly isDesktop = !!(window as unknown as { mvDesktop?: boolean }).mvDesktop;
+  private readonly isDesktop = !!(window as unknown as { mvDesktop?: unknown }).mvDesktop;
   private corsWarned = false;
   private wakeLock: WakeLockSentinel | null = null;
+  private nativeCapture: NativeCapture | null = null;
+  private resumeArmed = false;
   private fpsAccum = 0;
   private fpsFrames = 0;
   private huePhase = 0;
   private shuffleAccum = 0;
-  private lastFrame: { bass: number; mid: number; treble: number; level: number; beat: boolean } | null = null;
+  private lastFrame: FrameMetrics | null = null;
 
   constructor(private readonly root: HTMLElement) {
     this.settings = loadSettings();
@@ -96,7 +118,13 @@ export class App {
       smoothingTimeConstant: this.settings.audio.smoothing,
       gain: this.settings.audio.gain,
     });
-    this.engine.onEnded = () => {
+    this.engine.onEnded = (kind) => {
+      // In Spotify mode the audio input is just the ears; if it drops (device
+      // change), get it back quietly and keep going.
+      if (this.spotify.isActive && (kind === 'mic' || (this.isDesktop && kind === 'display'))) {
+        void this.spotify.recoverMic();
+        return;
+      }
       this.started = false;
       if (this.isDesktop) {
         // A device change (e.g. plugging in headphones) ends the loopback stream —
@@ -160,10 +188,43 @@ export class App {
     }
     this.manager.setPreset(pid, this.settings.presetParams[pid]!);
 
+    this.spotify = new SpotifyMode({
+      getClientId: () => this.settings.spotify.clientId.trim() || DEFAULT_SPOTIFY_CLIENT_ID,
+      // On the desktop the loopback already hears everything; elsewhere listen with the mic.
+      connectMic: async () => {
+        if (this.isDesktop) {
+          if (this.engine.getCurrentSource() !== 'display') await this.engine.useDisplayAudio();
+          return;
+        }
+        await this.engine.useMicrophone();
+      },
+      onPalette: (colors) => this.manager.setPaletteOverride(colors),
+      onTrack: (track, tempo) => this.shell.nowPlaying.setTrack(track, tempo),
+      onStatus: (state, detail) => this.onSpotifyStatus(state, detail),
+      onError: (message, fatal) => {
+        this.shell.toast(message, true);
+        if (fatal) {
+          this.shell.nowPlaying.hide();
+          this.started = false;
+          this.shell.showOverlay();
+          this.shell.setStatus(message, true);
+          this.panel.syncSpotify();
+        }
+      },
+      toast: (message, isError) => this.shell.toast(message, isError),
+      engineInfo: () => ({
+        binCount: this.engine.analyser.frequencyBinCount,
+        fftSize: this.engine.analyser.fftSize,
+        sampleRate: this.engine.context.sampleRate,
+      }),
+    });
+    this.spotify.settings = this.settings.spotify;
+
     this.shell = new UIShell(
       root,
       {
         source: {
+          onSpotify: () => void this.connect('spotify'),
           onMic: () => void this.connect('mic'),
           onDisplay: () => void this.connect('display'),
           onFile: (file) => void this.connect('file', file),
@@ -171,8 +232,16 @@ export class App {
         },
         onTogglePanel: () => this.panel.toggle(),
         onFullscreen: () => this.toggleFullscreen(),
+        nowPlaying: {
+          onTapBeat: () => this.spotify.tapBeat(),
+          onDisconnect: () => this.leaveSpotify(),
+        },
       },
-      { showDisplay: hasDisplayMedia(), showFullscreen: hasFullscreen() },
+      {
+        showDisplay: hasDisplayMedia() || hasNativeCapture(),
+        nativeCapture: hasNativeCapture(),
+        showFullscreen: hasFullscreen(),
+      },
     );
 
     this.panel = new ControlPanel(root, this.settings, {
@@ -185,6 +254,11 @@ export class App {
         saveSettings(this.settings);
       },
       onReset: () => this.reset(),
+      spotify: {
+        isConnected: () => this.spotify.isConnected(),
+        connect: () => void this.connect('spotify'),
+        disconnect: () => this.logoutSpotify(),
+      },
     });
 
     this.viewport = new ViewportWatcher(root, this.settings.visual.resolution, (size) => this.onResize(size));
@@ -192,6 +266,7 @@ export class App {
 
     this.registerEvents();
     this.apply();
+    this.onSpotifyStatus('off', '');
   }
 
   start(): void {
@@ -215,6 +290,9 @@ export class App {
       await this.connect('display');
     }
     if (!this.started) this.shell.showOverlay(); // gave up → let the user pick a source manually
+    // A Spotify login from an earlier session carries over: resume it for the
+    // album colours + now-playing card (the loopback stays the audio input).
+    if (this.started && this.spotify.isConnected() && !this.spotify.isActive) await this.connect('spotify');
   }
 
   /** Switch preset by id at runtime (used by deep-links / smoke tests). */
@@ -226,46 +304,166 @@ export class App {
     saveSettings(this.settings);
   }
 
-  /** Auto-shuffle: jump to a random preset different from the current one. */
-  private shuffleToRandomPreset(): void {
-    const list = this.manager.list();
-    if (list.length < 2) return;
-    const current = this.settings.visual.preset;
-    let pick = current;
-    for (let i = 0; i < 12 && pick === current; i++) {
-      pick = list[Math.floor(Math.random() * list.length)]!.id;
+  toast(message: string, isError = false): void {
+    this.shell.toast(message, isError);
+  }
+
+  // ---- Spotify ----
+
+  /** Finish the OAuth round-trip (the callback URL) and enter Spotify mode. */
+  async completeSpotifyLogin(url: string): Promise<void> {
+    try {
+      await this.spotify.completeLogin(url);
+    } catch (e) {
+      this.shell.showOverlay();
+      this.shell.setStatus(describeError(e), true);
+      return;
     }
-    this.settings.visual.preset = pick;
-    this.manager.setPreset(pick, this.settings.presetParams[pick]!);
-    this.panel.syncPreset();
-    saveSettings(this.settings);
-    this.shell.toast(`Shuffled → ${list.find((p) => p.id === pick)?.label ?? pick}`);
+    this.panel.syncSpotify();
+    this.shell.toast('Spotify connected');
+    await this.connect('spotify');
+  }
+
+  private async connectSpotify(): Promise<void> {
+    if (!this.spotify.isConnected()) {
+      const clientId = this.settings.spotify.clientId.trim() || DEFAULT_SPOTIFY_CLIENT_ID;
+      if (!clientId) {
+        this.shell.setBusy(false);
+        this.shell.setStatus('Spotify needs a Client ID first: open ⚙️ → Spotify and paste yours (see the README).', true);
+        this.panel.setVisible(true);
+        return;
+      }
+      this.shell.setStatus('Opening Spotify login…');
+      await this.spotify.login(); // web: navigates away; native shells come back via musicviz://
+      this.shell.setBusy(false);
+      this.shell.setStatus(platformKind() === 'web' ? 'Redirecting to Spotify…' : 'Finish logging in, then come back here.');
+      return;
+    }
+    await this.stopNativeCapture();
+    await this.spotify.start();
+    this.onConnected();
+    this.shell.nowPlaying.show();
+    this.panel.syncSpotify();
+    // Browsers (iOS especially) only run audio after a gesture; if we got here from a
+    // redirect there hasn't been one yet.
+    if (this.engine.state !== 'running') this.armResumeOnGesture();
+  }
+
+  private leaveSpotify(): void {
+    this.spotify.stop();
+    this.shell.nowPlaying.hide();
+    this.started = false;
+    this.shell.showOverlay();
+    this.panel.syncSpotify();
+  }
+
+  private logoutSpotify(): void {
+    this.spotify.logout();
+    this.shell.nowPlaying.hide();
+    this.started = false;
+    this.shell.showOverlay();
+    this.shell.toast('Disconnected from Spotify');
+    this.panel.syncSpotify();
+  }
+
+  private onSpotifyStatus(state: SpotifyModeState, detail: string): void {
+    this.shell.nowPlaying.setState(state, detail);
+    this.panel.readouts.spotify =
+      state === 'off' ? (this.spotify.isConnected() ? 'Connected (not active)' : 'Not connected') : detail;
+  }
+
+  private armResumeOnGesture(): void {
+    if (this.resumeArmed) return;
+    this.resumeArmed = true;
+    this.shell.toast('Tap anywhere to start listening');
+    const handler = (): void => {
+      window.removeEventListener('pointerdown', handler);
+      window.removeEventListener('keydown', handler);
+      this.resumeArmed = false;
+      void this.engine.resume();
+    };
+    window.addEventListener('pointerdown', handler);
+    window.addEventListener('keydown', handler);
   }
 
   /** Debug/test hooks (only reachable via the ?debug window handle). */
-  debugMetrics(): { bass: number; mid: number; treble: number; level: number; beat: boolean } | null {
+  debugMetrics(): FrameMetrics | null {
     return this.lastFrame;
   }
-  debugConnect(kind: 'mic' | 'display' | 'file' | 'url', arg?: File | string): Promise<void> {
+  debugConnect(kind: SourceRequest, arg?: File | string): Promise<void> {
     return this.connect(kind, arg);
+  }
+  debugSpotify(): {
+    connected: boolean;
+    active: boolean;
+    state: SpotifyModeState;
+    track: SpotifyTrack | null;
+    tempo: TempoInfo | null;
+    rawLevel: number;
+  } {
+    return {
+      connected: this.spotify.isConnected(),
+      active: this.spotify.isActive,
+      state: this.spotify.state,
+      track: this.spotify.currentTrack,
+      tempo: this.spotify.currentTempo,
+      rawLevel: this.engine.raw.level,
+    };
+  }
+  debugTapBeat(): void {
+    this.spotify.tapBeat();
   }
 
   // ---- source connection ----
 
-  private async connect(kind: 'mic' | 'display' | 'file' | 'url', arg?: File | string): Promise<void> {
+  private async connect(kind: SourceRequest, arg?: File | string): Promise<void> {
     this.shell.setBusy(true);
     this.shell.setStatus('Connecting…');
     this.corsWarned = false;
     try {
+      if (kind === 'spotify') {
+        await this.connectSpotify();
+        return;
+      }
+      if (this.spotify.isActive) {
+        this.spotify.stop();
+        this.shell.nowPlaying.hide();
+        this.panel.syncSpotify();
+      }
+      if (kind !== 'display') await this.stopNativeCapture();
       if (kind === 'mic') await this.engine.useMicrophone();
-      else if (kind === 'display') await this.engine.useDisplayAudio();
-      else if (kind === 'file') await this.engine.useFile(arg as File);
+      else if (kind === 'display') {
+        if (hasNativeCapture()) await this.connectNativeCapture();
+        else await this.engine.useDisplayAudio();
+      } else if (kind === 'file') await this.engine.useFile(arg as File);
       else await this.engine.useUrl(arg as string);
       this.onConnected();
     } catch (e) {
       this.shell.setBusy(false);
       this.shell.setStatus(describeError(e), true);
     }
+  }
+
+  /** Android app: capture other apps' audio natively and feed it to the engine as a stream. */
+  private async connectNativeCapture(): Promise<void> {
+    await this.engine.resume();
+    await this.stopNativeCapture();
+    this.shell.setStatus('Choose "Entire screen" when Android asks — only the audio is used.');
+    const capture = await startNativeCapture(this.engine.context);
+    capture.onEnded = () => {
+      this.nativeCapture = null;
+      this.engine.onEnded?.('display');
+    };
+    this.nativeCapture = capture;
+    this.engine.useMediaStream(capture.stream, 'display');
+  }
+
+  private async stopNativeCapture(): Promise<void> {
+    const capture = this.nativeCapture;
+    if (!capture) return;
+    this.nativeCapture = null;
+    capture.onEnded = null;
+    await capture.stop();
   }
 
   private onConnected(): void {
@@ -281,8 +479,16 @@ export class App {
   // ---- frame ----
 
   private frame(dt: number, t: number): void {
-    const frame = this.engine.update();
-    this.lastFrame = { bass: frame.bass, mid: frame.mid, treble: frame.treble, level: frame.level, beat: frame.beat };
+    const engineFrame = this.engine.update();
+    const frame = this.spotify.process(engineFrame, this.engine.raw.level, dt);
+    this.lastFrame = {
+      bass: frame.bass,
+      mid: frame.mid,
+      treble: frame.treble,
+      level: frame.level,
+      beat: frame.beat,
+      bpm: frame.bpm,
+    };
 
     if (this.settings.visual.rgbRotate) {
       this.huePhase = (this.huePhase + dt * this.settings.visual.rgbSpeed) % 1;
@@ -316,6 +522,22 @@ export class App {
     }
   }
 
+  /** Auto-shuffle: jump to a random preset different from the current one. */
+  private shuffleToRandomPreset(): void {
+    const list = this.manager.list();
+    if (list.length < 2) return;
+    const current = this.settings.visual.preset;
+    let pick = current;
+    for (let i = 0; i < 12 && pick === current; i++) {
+      pick = list[Math.floor(Math.random() * list.length)]!.id;
+    }
+    this.settings.visual.preset = pick;
+    this.manager.setPreset(pick, this.settings.presetParams[pick]!);
+    this.panel.syncPreset();
+    saveSettings(this.settings);
+    this.shell.toast(`Shuffled → ${list.find((p) => p.id === pick)?.label ?? pick}`);
+  }
+
   // ---- settings ----
 
   private apply(): void {
@@ -338,6 +560,9 @@ export class App {
     });
     this.manager.setCameraDynamics(s.visual.cameraDynamics, s.visual.cameraZoom, s.visual.cameraShake);
     this.viewport.setDprCap(s.visual.resolution);
+
+    this.spotify.settings = s.spotify;
+    this.spotify.refreshPalette();
 
     saveSettings(s);
   }

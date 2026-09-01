@@ -1,21 +1,28 @@
 {
   "name": "music-viz",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Adjustable WebGL 3D music visualizer that reacts to streamed music (phone + PC).",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:desktop": "tsc --noEmit && cross-env ELECTRON=1 vite build",
+    "build:android": "tsc --noEmit && cross-env ANDROID=1 vite build",
+    "icons": "node scripts/app-icons.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/core": "^8.5.1",
     "three": "^0.185.1",
     "tweakpane": "^4.0.5"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.1",
     "@tweakpane/core": "^2.0.5",
     "@types/three": "^0.185.4",
     "cross-env": "^7.0.3",

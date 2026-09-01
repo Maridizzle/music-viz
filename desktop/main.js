@@ -5,7 +5,7 @@
 // interactively and configures the idle timeout / start-with-Windows.
 const {
   app, BrowserWindow, protocol, desktopCapturer, powerSaveBlocker, powerMonitor,
-  Tray, Menu, nativeImage,
+  Tray, Menu, nativeImage, shell, ipcMain,
 } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
@@ -18,9 +18,31 @@ const MIME = {
   '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
   '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webp': 'image/webp',
   '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.map': 'application/json',
+  '.webmanifest': 'application/manifest+json',
 };
 
 const TIMEOUT_CHOICES = [1, 3, 5, 10, 15, 30];
+
+// ---- Spotify login callback ----
+// The web app opens Spotify's login page in the system browser; Spotify redirects to
+// musicviz://spotify?code=…, which Windows routes to this app (registered below).
+const SPOTIFY_PROTOCOL = 'musicviz';
+let pendingSpotifyUrl = null;
+
+function spotifyUrlFromArgv(argv) {
+  return argv.find((a) => typeof a === 'string' && a.startsWith(`${SPOTIFY_PROTOCOL}://`)) || null;
+}
+
+function deliverSpotifyCallback(url) {
+  if (!url) return;
+  if (win && !win.webContents.isLoading()) {
+    win.webContents.send('spotify-callback', url);
+    win.focus();
+    return;
+  }
+  pendingSpotifyUrl = url; // handed over once a window has loaded
+  if (!win) openInteractive();
+}
 
 // A privileged, secure, standard scheme so the page runs in a secure context
 // (getDisplayMedia / loopback capture require it) and relative asset paths resolve.
@@ -115,6 +137,11 @@ function createVisualizerWindow(mode) {
 
   // Auto-start system-audio capture with a synthesized user gesture once loaded.
   win.webContents.on('did-finish-load', () => {
+    if (pendingSpotifyUrl && win) {
+      const url = pendingSpotifyUrl;
+      pendingSpotifyUrl = null;
+      win.webContents.send('spotify-callback', url);
+    }
     setTimeout(() => {
       if (win) win.webContents.executeJavaScript('window.__mvStartLoopback && window.__mvStartLoopback()', true).catch(() => {});
     }, 600);
@@ -220,9 +247,30 @@ function refreshTrayMenu() {
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.on('second-instance', () => openInteractive());
+  app.on('second-instance', (_event, argv) => {
+    const url = spotifyUrlFromArgv(argv);
+    if (url) deliverSpotifyCallback(url);
+    else openInteractive();
+  });
+  app.on('open-url', (event, url) => {
+    event.preventDefault();
+    deliverSpotifyCallback(url);
+  });
 
   app.whenReady().then(() => {
+    // Own the musicviz:// scheme so the Spotify login can come back to us.
+    if (process.defaultApp) {
+      if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient(SPOTIFY_PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);
+      }
+    } else {
+      app.setAsDefaultProtocolClient(SPOTIFY_PROTOCOL);
+    }
+    ipcMain.handle('open-external', (_event, url) => {
+      if (typeof url === 'string' && /^https:\/\/accounts\.spotify\.com\//.test(url)) return shell.openExternal(url);
+      return undefined;
+    });
+
     protocol.handle('app', (request) => {
       let pathname = decodeURIComponent(new URL(request.url).pathname);
       if (!pathname || pathname === '/') pathname = '/index.html';
@@ -244,6 +292,10 @@ if (!app.requestSingleInstanceLock()) {
       buildTray();
     } catch { /* no system tray available (rare) — the watcher still runs */ }
     startWatcher();
+
+    // Launched by Windows to handle a musicviz:// URL while we weren't running.
+    const initialUrl = spotifyUrlFromArgv(process.argv);
+    if (initialUrl) deliverSpotifyCallback(initialUrl);
 
     if (firstRun) {
       // First launch: just settle into the tray (do NOT open a window — an open window

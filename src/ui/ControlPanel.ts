@@ -4,6 +4,7 @@ import type { ParamSchema } from '../visual/Preset';
 import { paletteNames } from '../visual/palette';
 
 type Folder = ReturnType<Pane['addFolder']>;
+type Button = ReturnType<Folder['addButton']>;
 
 export interface PanelHooks {
   presets: { id: string; label: string }[];
@@ -11,6 +12,11 @@ export interface PanelHooks {
   onChange: () => void;
   onPresetChange: (id: string) => void;
   onReset: () => void;
+  spotify: {
+    isConnected: () => boolean;
+    connect: () => void;
+    disconnect: () => void;
+  };
 }
 
 const FFT_OPTIONS: Record<string, number> = {
@@ -33,7 +39,9 @@ export class ControlPanel {
   private readonly panel: HTMLElement;
   private pane!: Pane;
   private presetFolder: Folder | null = null;
-  readonly readouts = { fps: 0, bpm: 0 };
+  private spotifyConnect: Button | null = null;
+  private spotifyDisconnect: Button | null = null;
+  readonly readouts = { fps: 0, bpm: 0, spotify: 'Not connected' };
 
   constructor(
     root: HTMLElement,
@@ -92,6 +100,18 @@ export class ControlPanel {
     visual.addBinding(this.settings.visual, 'resolution', { label: 'Render scale', min: 0.5, max: 2, step: 0.05 });
     visual.addButton({ title: 'Reset to defaults' }).on('click', () => this.hooks.onReset());
 
+    const spotify = this.pane.addFolder({ title: 'Spotify', expanded: false });
+    spotify.addBinding(this.readouts, 'spotify', { readonly: true, label: 'Status' });
+    this.spotifyConnect = spotify.addButton({ title: 'Connect Spotify' });
+    this.spotifyConnect.on('click', () => this.hooks.spotify.connect());
+    this.spotifyDisconnect = spotify.addButton({ title: 'Disconnect Spotify' });
+    this.spotifyDisconnect.on('click', () => this.hooks.spotify.disconnect());
+    spotify.addBinding(this.settings.spotify, 'albumColors', { label: 'Album colours' });
+    spotify.addBinding(this.settings.spotify, 'beatLock', { label: 'Beat-lock (headphones)' });
+    spotify.addBinding(this.settings.spotify, 'beatIntensity', { label: 'Beat intensity', min: 0, max: 2, step: 0.05 });
+    spotify.addBinding(this.settings.spotify, 'clientId', { label: 'Client ID' });
+    this.syncSpotify();
+
     this.rebuildPresetFolder();
   }
 
@@ -125,10 +145,19 @@ export class ControlPanel {
     this.rebuildPresetFolder();
   }
 
+  /** Show Connect or Disconnect depending on whether a Spotify login is stored. */
+  syncSpotify(): void {
+    const connected = this.hooks.spotify.isConnected();
+    if (this.spotifyConnect) this.spotifyConnect.hidden = connected;
+    if (this.spotifyDisconnect) this.spotifyDisconnect.hidden = !connected;
+  }
+
   /** Rebuild the whole pane from the current settings object (used after a reset). */
   rebuild(): void {
     this.pane.dispose();
     this.presetFolder = null;
+    this.spotifyConnect = null;
+    this.spotifyDisconnect = null;
     this.build();
   }
 
