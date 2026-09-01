@@ -26,6 +26,8 @@ export class PresetManager {
   private vp: Viewport;
 
   private paletteColors: string[] = getPalette('Neon').colors;
+  private paletteName = 'Neon';
+  private paletteOverride: string[] | null = null; // e.g. colours pulled from album art
   private readonly style: VisualStyle;
   private readonly bg = new THREE.Color('#05060a');
 
@@ -100,9 +102,20 @@ export class PresetManager {
   }
 
   setStyle(paletteName: string, hue: number, saturation: number): void {
-    this.paletteColors = getPalette(paletteName).colors;
+    this.paletteName = paletteName;
     this.style.hue = hue;
     this.style.saturation = saturation;
+    this.applyPalette();
+  }
+
+  /** Temporarily replace the named palette (null restores it). Needs ≥ 2 colours. */
+  setPaletteOverride(colors: string[] | null): void {
+    this.paletteOverride = colors && colors.length >= 2 ? colors : null;
+    this.applyPalette();
+  }
+
+  private applyPalette(): void {
+    this.paletteColors = this.paletteOverride ?? getPalette(this.paletteName).colors;
   }
 
   /** Update only the hue (cheap; safe to call every frame for RGB rotation). */

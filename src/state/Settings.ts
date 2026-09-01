@@ -69,10 +69,18 @@ export interface VisualSettings {
   shuffleSeconds: number; // seconds between auto-switches
 }
 
+export interface SpotifySettings {
+  clientId: string; // overrides the baked-in DEFAULT_SPOTIFY_CLIENT_ID when set
+  albumColors: boolean; // recolour the visuals from the album art
+  beatLock: boolean; // pulse to the known beat grid when the mic can't hear the music
+  beatIntensity: number; // 0..2 strength of the synthetic beats
+}
+
 export interface Settings {
   version: number;
   audio: AudioSettings;
   visual: VisualSettings;
+  spotify: SpotifySettings;
   presetParams: Record<string, PresetParams>;
 }
 
@@ -153,6 +161,12 @@ export function defaultSettings(): Settings {
       cameraShake: 1,
       autoShuffle: false,
       shuffleSeconds: 300,
+    },
+    spotify: {
+      clientId: '',
+      albumColors: true,
+      beatLock: true,
+      beatIntensity: 1,
     },
     presetParams: defaultPresetParams(),
   };

@@ -53,6 +53,9 @@ export class AudioEngine {
 
   emphasis: BandEmphasis = { bass: 1, mid: 1, treble: 1 };
 
+  /** Raw (pre-auto-gain) readings from the last update: RMS level + band averages, 0..1. */
+  readonly raw = { level: 0, bass: 0, mid: 0, treble: 0 };
+
   /** Called when the active source ends on its own (display share stopped, track ended, media finished). */
   onEnded: ((kind: SourceKind) => void) | null = null;
 
@@ -197,6 +200,14 @@ export class AudioEngine {
     audioTracks[0]!.addEventListener('ended', () => this.onEnded?.('display'));
   }
 
+  /** Use an already-obtained MediaStream (e.g. the Android app's native system-audio capture). */
+  useMediaStream(stream: MediaStream, kind: SourceKind = 'display'): void {
+    this.teardownCurrent();
+    this.stream = stream;
+    this.attachStream(stream, kind);
+    stream.getAudioTracks()[0]?.addEventListener('ended', () => this.onEnded?.(kind));
+  }
+
   async useFile(file: File): Promise<HTMLAudioElement> {
     if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
     this.objectUrl = URL.createObjectURL(file);
@@ -248,6 +259,10 @@ export class AudioEngine {
     const midRaw = averageBand(this.freq, b.midStart, b.midEnd);
     const trebRaw = averageBand(this.freq, b.trebStart, b.trebEnd);
     const levelRaw = rmsLevel(this.time);
+    this.raw.level = levelRaw;
+    this.raw.bass = bassRaw;
+    this.raw.mid = midRaw;
+    this.raw.treble = trebRaw;
 
     const f = this.frame;
     f.bass = Math.min(1, this.normalize('bass', bassRaw, dt) * this.emphasis.bass);

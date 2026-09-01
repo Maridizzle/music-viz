@@ -26,8 +26,8 @@ The installers are built by CI on a real Windows runner:
 Launch it and it lives in the **system tray** (bottom-right, by the clock), watching
 Windows' idle timer. After your chosen number of minutes with no mouse/keyboard, it
 takes over the screen with the fullscreen visualizer reacting to whatever's playing.
-**Any input dismisses it** back to the tray. (First launch also opens it once so you
-can see it works.)
+**Any input dismisses it** back to the tray. (On first launch it just settles into
+the tray and shows a balloon telling you so.)
 
 **Right-click the tray icon** for:
 
@@ -40,6 +40,12 @@ can see it works.)
 - **Quit** — stop the app entirely.
 
 Just play music (Spotify, YouTube, a game…) and it reacts automatically — no setup.
+
+**Spotify extras (optional):** in the interactive window tap **🎵 → Spotify** and log
+in (it opens in your browser and comes back to the app via `musicviz://`). From then
+on the screensaver also shows a now‑playing card and takes its colours from the
+album art; the audio still comes from the loopback. Needs a Client ID — see the
+main README → *Spotify mode*.
 
 ## Build it yourself
 

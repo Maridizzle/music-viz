@@ -1,8 +1,16 @@
 export interface SourceHandlers {
+  onSpotify: () => void;
   onMic: () => void;
   onDisplay: () => void;
   onFile: (file: File) => void;
   onUrl: (url: string) => void;
+}
+
+export interface SourcePickerOptions {
+  /** Offer the tab/system-audio option at all. */
+  showDisplay: boolean;
+  /** The display option is the native Android capture (worded differently). */
+  nativeCapture: boolean;
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -16,13 +24,22 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-/** The four audio-source controls (mic / system audio / file / URL). Reused in the start overlay. */
+/** The audio-source controls (Spotify / mic / system audio / file / URL). Reused in the start overlay. */
 export class SourcePicker {
   readonly root: HTMLElement;
   private buttons: HTMLButtonElement[] = [];
 
-  constructor(handlers: SourceHandlers, opts: { showDisplay: boolean }) {
+  constructor(handlers: SourceHandlers, opts: SourcePickerOptions) {
     this.root = el('div', 'source-grid');
+
+    const spotifyBtn = this.makeButton(
+      '🟢',
+      'Spotify',
+      "Reacts to what you're playing — mic, or beat-lock on headphones",
+      handlers.onSpotify,
+    );
+    spotifyBtn.classList.add('spotify');
+    this.root.appendChild(spotifyBtn);
 
     this.root.appendChild(
       this.makeButton('🎤', 'Microphone', 'React to sound in the room', handlers.onMic),
@@ -30,7 +47,9 @@ export class SourcePicker {
 
     if (opts.showDisplay) {
       this.root.appendChild(
-        this.makeButton('🖥️', 'Tab / system audio', 'Capture a Spotify or YouTube tab', handlers.onDisplay),
+        opts.nativeCapture
+          ? this.makeButton('🖥️', 'System audio', 'Any app that allows capture (not Spotify)', handlers.onDisplay)
+          : this.makeButton('🖥️', 'Tab / system audio', 'Capture a Spotify or YouTube tab', handlers.onDisplay),
       );
     }
 

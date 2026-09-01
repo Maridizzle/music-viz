@@ -1,9 +1,17 @@
+import { NowPlayingCard, type NowPlayingHandlers } from './NowPlayingCard';
 import { SourcePicker, type SourceHandlers } from './SourcePicker';
 
 export interface OverlayHandlers {
   source: SourceHandlers;
   onTogglePanel: () => void;
   onFullscreen: () => void;
+  nowPlaying: NowPlayingHandlers;
+}
+
+export interface OverlayOptions {
+  showDisplay: boolean;
+  nativeCapture: boolean;
+  showFullscreen: boolean;
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -17,19 +25,16 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-/** Start overlay ("choose a source"), top-bar buttons, and transient toasts. */
+/** Start overlay ("choose a source"), top-bar buttons, now-playing card, and transient toasts. */
 export class UIShell {
+  readonly nowPlaying: NowPlayingCard;
   private readonly overlay: HTMLElement;
   private readonly status: HTMLElement;
   private readonly picker: SourcePicker;
   private readonly toastEl: HTMLElement;
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(
-    root: HTMLElement,
-    handlers: OverlayHandlers,
-    opts: { showDisplay: boolean; showFullscreen: boolean },
-  ) {
+  constructor(root: HTMLElement, handlers: OverlayHandlers, opts: OverlayOptions) {
     // Top bar
     const topbar = el('div', 'topbar');
     const sourceBtn = el('button', 'icon-btn', '🎵') as HTMLButtonElement;
@@ -54,12 +59,18 @@ export class UIShell {
       el('h1', 'overlay-title', 'Music Visualizer'),
       el('p', 'overlay-sub', 'Choose an audio source to begin'),
     );
-    this.picker = new SourcePicker(handlers.source, { showDisplay: opts.showDisplay });
+    this.picker = new SourcePicker(handlers.source, {
+      showDisplay: opts.showDisplay,
+      nativeCapture: opts.nativeCapture,
+    });
     card.appendChild(this.picker.root);
     this.status = el('p', 'overlay-status');
     card.appendChild(this.status);
     this.overlay.appendChild(card);
     root.appendChild(this.overlay);
+
+    // Now-playing (Spotify mode) card
+    this.nowPlaying = new NowPlayingCard(root, handlers.nowPlaying);
 
     // Toast
     this.toastEl = el('div', 'toast');
