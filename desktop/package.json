@@ -1,6 +1,6 @@
 {
   "name": "music-viz-desktop",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Music Visualizer — a Windows desktop screensaver that reacts to system audio.",
   "author": "maridizzle",
   "license": "MIT",
