@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #wrap { width: 100vw; height: 100vh; }
+  svg { display: block; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <svg id="icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="40%" r="78%">
+        <stop offset="0%" stop-color="#1a1f3d" />
+        <stop offset="55%" stop-color="#0a0c1a" />
+        <stop offset="100%" stop-color="#050609" />
+      </radialGradient>
+      <radialGradient id="core" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ffffff" />
+        <stop offset="38%" stop-color="#c8f6ff" />
+        <stop offset="100%" stop-color="#25c9ff" />
+      </radialGradient>
+      <filter id="halo" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="6" />
+      </filter>
+      <filter id="softglow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="18" />
+      </filter>
+    </defs>
+
+    <!-- dark rounded tile -->
+    <rect x="16" y="16" width="480" height="480" rx="116" fill="url(#bg)" />
+    <rect x="17" y="17" width="478" height="478" rx="115" fill="none"
+          stroke="#39428a" stroke-opacity="0.55" stroke-width="2" />
+
+    <!-- glowing radial spectrum -->
+    <g id="bars" filter="url(#halo)" opacity="0.85"></g>
+    <g id="barsSharp"></g>
+
+    <!-- core -->
+    <circle cx="256" cy="256" r="74" fill="#25c9ff" opacity="0.28" filter="url(#softglow)" />
+    <circle cx="256" cy="256" r="40" fill="url(#core)" filter="url(#halo)" />
+    <circle cx="256" cy="256" r="40" fill="url(#core)" />
+    <circle cx="256" cy="256" r="14" fill="#ffffff" />
+  </svg>
+</div>
+<script>
+  const NS = 'http://www.w3.org/2000/svg';
+  const cx = 256, cy = 256, Ri = 92, N = 52;
+  // App neon palette, interpolated around the ring.
+  const pal = [[37,201,255],[80,120,255],[168,80,255],[255,62,165],[55,245,160]];
+  const lerp = (a, b, t) => a + (b - a) * t;
+  function col(t) {
+    const x = t * pal.length, i = Math.floor(x) % pal.length, f = x - Math.floor(x);
+    const a = pal[i], b = pal[(i + 1) % pal.length];
+    return `rgb(${lerp(a[0],b[0],f)|0},${lerp(a[1],b[1],f)|0},${lerp(a[2],b[2],f)|0})`;
+  }
+  // Smooth, musical-looking spectrum profile.
+  function h(i) {
+    const a = i / N * Math.PI * 2;
+    const v = 0.5 + 0.28 * Math.sin(a * 3 + 0.4) + 0.18 * Math.sin(a * 7 + 1.2) + 0.12 * Math.sin(a * 13 + 0.2);
+    return Math.max(0.16, Math.min(1, v));
+  }
+  const bars = document.getElementById('bars');
+  const sharp = document.getElementById('barsSharp');
+  const w = (2 * Math.PI * Ri / N) * 0.6;
+  for (let i = 0; i < N; i++) {
+    const ang = i / N * Math.PI * 2 - Math.PI / 2;
+    const len = 52 + h(i) * 120;
+    const x1 = cx + Math.cos(ang) * Ri, y1 = cy + Math.sin(ang) * Ri;
+    const x2 = cx + Math.cos(ang) * (Ri + len), y2 = cy + Math.sin(ang) * (Ri + len);
+    const c = col(i / N);
+    for (const grp of [bars, sharp]) {
+      const ln = document.createElementNS(NS, 'line');
+      ln.setAttribute('x1', x1); ln.setAttribute('y1', y1);
+      ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
+      ln.setAttribute('stroke', c);
+      ln.setAttribute('stroke-width', w);
+      ln.setAttribute('stroke-linecap', 'round');
+      grp.appendChild(ln);
+    }
+  }
+</script>
+</body>
+</html>
