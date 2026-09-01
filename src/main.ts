@@ -8,26 +8,30 @@ const app = new App(root);
 
 const desktop = !!(window as unknown as { mvDesktop?: boolean }).mvDesktop;
 if (desktop) {
-  // Electron screensaver shell: run ambient visuals immediately and expose a hook the
-  // main process calls with a synthesized user gesture to auto-start system-audio
+  // Electron shell. In screensaver mode (?screensaver) it runs as a fullscreen saver
+  // dismissed on any input; otherwise it's an interactive window. Either way the main
+  // process calls this hook with a synthesized user gesture to auto-start system-audio
   // capture (WASAPI loopback) without a click. See desktop/main.js.
+  const screensaver = location.search.includes('screensaver');
   (window as unknown as { __mvStartLoopback?: () => void }).__mvStartLoopback = () => {
     void app.startDesktopAudio();
   };
-  app.startDesktopIdle();
+  app.startDesktopIdle(screensaver);
 
-  // Hide the cursor when idle, like a real screensaver.
-  let idle: ReturnType<typeof setTimeout> | undefined;
-  const hide = (): void => {
-    document.body.style.cursor = 'none';
-  };
-  const wake = (): void => {
-    document.body.style.cursor = '';
-    if (idle) clearTimeout(idle);
-    idle = setTimeout(hide, 3000);
-  };
-  window.addEventListener('mousemove', wake);
-  wake();
+  // Hide the cursor when idle — only as a screensaver (interactive mode keeps it).
+  if (screensaver) {
+    let idle: ReturnType<typeof setTimeout> | undefined;
+    const hide = (): void => {
+      document.body.style.cursor = 'none';
+    };
+    const wake = (): void => {
+      document.body.style.cursor = '';
+      if (idle) clearTimeout(idle);
+      idle = setTimeout(hide, 3000);
+    };
+    window.addEventListener('mousemove', wake);
+    wake();
+  }
 } else {
   app.start();
 }
