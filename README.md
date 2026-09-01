@@ -23,7 +23,7 @@ so the visualizer reacts to one of three sources you pick in-app:
 
 ## Presets & controls
 
-Twenty-nine switchable 3D presets:
+Thirty-nine switchable 3D presets:
 
 - **Ico Blob** — audio‑displaced icosahedron
 - **Particle Field** — GPU point cloud
@@ -54,6 +54,16 @@ Twenty-nine switchable 3D presets:
 - **Boids Swarm** — a flock of neon darts that shoals to the music and bursts apart on beats
 - **Fluid Smoke** — billowing curl‑noise smoke that advects, swirls and lights up with the sound
 - **Spectrogram** — a scrolling waterfall of the live spectrum (frequency ✕ time)
+- **Black Hole** — an accretion disk orbiting a dark event horizon, with a photon ring
+- **Wormhole** — a fly‑through tunnel of ringed, noise‑textured walls twisting inward
+- **Fractal Zoom** — a morphing Julia set that breathes and zooms, pulsing with the bass
+- **Ferrofluid** — a magnetic blob sprouting spikes to the treble, pulsing to the bass
+- **Cymatics** — Chladni nodal‑line patterns whose mode numbers ride the frequency bands
+- **Oscilloscope** — the raw waveform drawn as a glowing scope / Lissajous figure
+- **Ribbons** — silky trailing ribbons flowing on a curl field, brightening with the music
+- **Vortex** — a whirlpool of points spiralling inward and flung outward on beats
+- **City Skyline** — a neon city fly‑through where the buildings are the spectrum bars
+- **DNA Helix** — a rotating double helix whose ladder rungs light up per frequency band
 
 An adaptive **auto‑gain** stage normalizes the bass/mid/treble/level metrics against
 the track's own recent dynamics, so every preset uses the full range and stays

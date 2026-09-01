@@ -36,6 +36,16 @@ import { GuitarHero } from './visual/presets/GuitarHero';
 import { Boids } from './visual/presets/Boids';
 import { Fluid } from './visual/presets/Fluid';
 import { Spectrogram } from './visual/presets/Spectrogram';
+import { BlackHole } from './visual/presets/BlackHole';
+import { Wormhole } from './visual/presets/Wormhole';
+import { FractalZoom } from './visual/presets/FractalZoom';
+import { Ferrofluid } from './visual/presets/Ferrofluid';
+import { Cymatics } from './visual/presets/Cymatics';
+import { Oscilloscope } from './visual/presets/Oscilloscope';
+import { Ribbons } from './visual/presets/Ribbons';
+import { Vortex } from './visual/presets/Vortex';
+import { CitySkyline } from './visual/presets/CitySkyline';
+import { DNAHelix } from './visual/presets/DNAHelix';
 
 function describeError(e: unknown): string {
   if (e instanceof Error) {
@@ -121,6 +131,16 @@ export class App {
       new Boids(),
       new Fluid(),
       new Spectrogram(),
+      new BlackHole(),
+      new Wormhole(),
+      new FractalZoom(),
+      new Ferrofluid(),
+      new Cymatics(),
+      new Oscilloscope(),
+      new Ribbons(),
+      new Vortex(),
+      new CitySkyline(),
+      new DNAHelix(),
     ]) {
       this.manager.register(preset);
     }

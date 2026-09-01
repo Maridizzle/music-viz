@@ -28,6 +28,16 @@ import { SCHEMA as GuitarSchema } from '../visual/presets/GuitarHero';
 import { SCHEMA as BoidsSchema } from '../visual/presets/Boids';
 import { SCHEMA as FluidSchema } from '../visual/presets/Fluid';
 import { SCHEMA as SpectrogramSchema } from '../visual/presets/Spectrogram';
+import { SCHEMA as BlackHoleSchema } from '../visual/presets/BlackHole';
+import { SCHEMA as WormholeSchema } from '../visual/presets/Wormhole';
+import { SCHEMA as FractalSchema } from '../visual/presets/FractalZoom';
+import { SCHEMA as FerrofluidSchema } from '../visual/presets/Ferrofluid';
+import { SCHEMA as CymaticsSchema } from '../visual/presets/Cymatics';
+import { SCHEMA as OscilloscopeSchema } from '../visual/presets/Oscilloscope';
+import { SCHEMA as RibbonsSchema } from '../visual/presets/Ribbons';
+import { SCHEMA as VortexSchema } from '../visual/presets/Vortex';
+import { SCHEMA as CitySchema } from '../visual/presets/CitySkyline';
+import { SCHEMA as DNASchema } from '../visual/presets/DNAHelix';
 
 export interface AudioSettings {
   gain: number;
@@ -97,6 +107,16 @@ export function defaultPresetParams(): Record<string, PresetParams> {
     boids: defaultsFromSchema(BoidsSchema),
     fluid: defaultsFromSchema(FluidSchema),
     spectrogram: defaultsFromSchema(SpectrogramSchema),
+    blackhole: defaultsFromSchema(BlackHoleSchema),
+    wormhole: defaultsFromSchema(WormholeSchema),
+    fractal: defaultsFromSchema(FractalSchema),
+    ferrofluid: defaultsFromSchema(FerrofluidSchema),
+    cymatics: defaultsFromSchema(CymaticsSchema),
+    oscilloscope: defaultsFromSchema(OscilloscopeSchema),
+    ribbons: defaultsFromSchema(RibbonsSchema),
+    vortex: defaultsFromSchema(VortexSchema),
+    city: defaultsFromSchema(CitySchema),
+    dna: defaultsFromSchema(DNASchema),
   };
 }
 
