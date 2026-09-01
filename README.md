@@ -23,7 +23,7 @@ so the visualizer reacts to one of three sources you pick in-app:
 
 ## Presets & controls
 
-Twenty-six switchable 3D presets:
+Twenty-nine switchable 3D presets:
 
 - **Ico Blob** — audio‑displaced icosahedron
 - **Particle Field** — GPU point cloud
@@ -51,6 +51,9 @@ Twenty-six switchable 3D presets:
 - **Plasma Globe** — a glass sphere with electric tendrils wandering to its surface
 - **Piano Roll** — synthesia-style notes scrolling onto a light-up keyboard
 - **Guitar Hero** — a 5-lane note highway with gems flying at the screen
+- **Boids Swarm** — a flock of neon darts that shoals to the music and bursts apart on beats
+- **Fluid Smoke** — billowing curl‑noise smoke that advects, swirls and lights up with the sound
+- **Spectrogram** — a scrolling waterfall of the live spectrum (frequency ✕ time)
 
 An adaptive **auto‑gain** stage normalizes the bass/mid/treble/level metrics against
 the track's own recent dynamics, so every preset uses the full range and stays
@@ -61,8 +64,9 @@ The ⚙️ panel adjusts everything live and remembers it (localStorage):
 - **Audio** — sensitivity, smoothing, FFT resolution, per‑band (bass/mid/treble)
   emphasis, beat sensitivity.
 - **Visual** — preset, colour palette, hue/saturation, **RGB rotate** (auto‑cycle
-  colours through the spectrum) + speed, background, bloom, and a render‑scale
-  slider for performance.
+  colours through the spectrum) + speed, background, bloom, a **beat camera**
+  (global dolly‑punch + shake that reacts across every preset) with zoom/shake
+  amounts, and a render‑scale slider for performance.
 - **Per‑preset** parameters, generated automatically from each preset.
 
 Plus a fullscreen button, wake‑lock (keeps the screen on while playing), and a

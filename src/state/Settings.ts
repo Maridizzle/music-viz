@@ -25,6 +25,9 @@ import { SCHEMA as MatrixSchema } from '../visual/presets/Matrix';
 import { SCHEMA as PlasmaSchema } from '../visual/presets/PlasmaGlobe';
 import { SCHEMA as PianoSchema } from '../visual/presets/PianoRoll';
 import { SCHEMA as GuitarSchema } from '../visual/presets/GuitarHero';
+import { SCHEMA as BoidsSchema } from '../visual/presets/Boids';
+import { SCHEMA as FluidSchema } from '../visual/presets/Fluid';
+import { SCHEMA as SpectrogramSchema } from '../visual/presets/Spectrogram';
 
 export interface AudioSettings {
   gain: number;
@@ -49,6 +52,9 @@ export interface VisualSettings {
   resolution: number; // devicePixelRatio cap
   rgbRotate: boolean; // auto-cycle colours through the spectrum
   rgbSpeed: number; // hue cycles per second
+  cameraDynamics: boolean; // global beat-reactive camera dolly/shake
+  cameraZoom: number; // dolly-punch intensity (0 = off)
+  cameraShake: number; // shake intensity (0 = off)
 }
 
 export interface Settings {
@@ -88,6 +94,9 @@ export function defaultPresetParams(): Record<string, PresetParams> {
     plasmaglobe: defaultsFromSchema(PlasmaSchema),
     pianoroll: defaultsFromSchema(PianoSchema),
     guitarhero: defaultsFromSchema(GuitarSchema),
+    boids: defaultsFromSchema(BoidsSchema),
+    fluid: defaultsFromSchema(FluidSchema),
+    spectrogram: defaultsFromSchema(SpectrogramSchema),
   };
 }
 
@@ -117,6 +126,9 @@ export function defaultSettings(): Settings {
       resolution: mobile ? 1.5 : 2,
       rgbRotate: false,
       rgbSpeed: 0.1,
+      cameraDynamics: true,
+      cameraZoom: 1,
+      cameraShake: 1,
     },
     presetParams: defaultPresetParams(),
   };
