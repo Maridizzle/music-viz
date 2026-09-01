@@ -1,0 +1,49 @@
+name: Build Windows desktop app
+
+# Produces the downloadable Windows screensaver (.exe) on a real Windows runner.
+# Run it manually from the Actions tab (Run workflow), or push a v* tag to also
+# attach the installers to a GitHub Release.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Build the web app with relative paths into desktop/web (ELECTRON=1).
+      - run: npm ci
+      - run: npm run build:desktop
+
+      # Package the Electron shell into an NSIS installer + a portable .exe.
+      - name: Install desktop deps
+        working-directory: desktop
+        run: npm install
+
+      - name: Build installers
+        working-directory: desktop
+        run: npm run dist
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: MusicVisualizer-Windows
+          path: desktop/release/*.exe
+          if-no-files-found: error
+
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: desktop/release/*.exe

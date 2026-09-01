@@ -82,6 +82,17 @@ The ⚙️ panel adjusts everything live and remembers it (localStorage):
 Plus a fullscreen button, wake‑lock (keeps the screen on while playing), and a
 live FPS / BPM readout.
 
+## Desktop screensaver (Windows)
+
+There's also a **downloadable Windows desktop app** that runs the visualizer
+fullscreen and reacts to **whatever is playing on your PC** (Spotify, YouTube, a
+game…) with **no setup** — it captures system audio via WASAPI **loopback**, so
+you never have to share a tab or enable "Stereo Mix".
+
+Grab it from the repo's **Actions → "Build Windows desktop app"** → latest run →
+the **`MusicVisualizer-Windows`** artifact (an installer and a portable `.exe`).
+Full details and build-it-yourself steps are in [`desktop/README.md`](desktop/README.md).
+
 ## Develop
 
 ```bash

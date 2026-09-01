@@ -1,0 +1,45 @@
+{
+  "name": "music-viz-desktop",
+  "version": "0.1.0",
+  "description": "Music Visualizer — a Windows desktop screensaver that reacts to system audio.",
+  "author": "maridizzle",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.maridizzle.musicviz",
+    "productName": "Music Visualizer",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "web/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Music Visualizer"
+    },
+    "portable": {
+      "artifactName": "MusicVisualizer-${version}-portable.${ext}"
+    }
+  }
+}

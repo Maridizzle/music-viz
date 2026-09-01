@@ -189,6 +189,18 @@ export class App {
     this.loop.start(); // idle visuals run behind the overlay
   }
 
+  /** Desktop (Electron) screensaver mode: run ambient visuals with no source overlay. */
+  startDesktopIdle(): void {
+    this.shell.hideOverlay();
+    this.loop.start();
+  }
+
+  /** Desktop mode: auto-capture system audio (WASAPI loopback, granted by the Electron shell). */
+  async startDesktopAudio(): Promise<void> {
+    await this.connect('display');
+    if (!this.started) this.shell.showOverlay(); // capture failed → let the user pick a source
+  }
+
   /** Switch preset by id at runtime (used by deep-links / smoke tests). */
   setPreset(id: string): void {
     if (!this.manager.getSchema(id)) return;
