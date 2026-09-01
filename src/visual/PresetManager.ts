@@ -81,6 +81,10 @@ export class PresetManager {
     const next = this.presets.get(id);
     if (!next) return;
     if (this.active) {
+      // Free the outgoing preset's GPU resources *before* it detaches its objects,
+      // so nothing is orphaned. A preset's own dispose() may miss a geometry; this
+      // traversal is the safety net that keeps a long auto-shuffle run from leaking.
+      this.disposeSceneResources();
       this.active.dispose();
       this.clearScene();
     }
@@ -184,5 +188,19 @@ export class PresetManager {
     for (let i = this.scene.children.length - 1; i >= 0; i--) {
       this.scene.remove(this.scene.children[i]!);
     }
+  }
+
+  /** Dispose every geometry/material currently in the scene graph (outgoing preset). */
+  private disposeSceneResources(): void {
+    this.scene.traverse((obj) => {
+      const o = obj as unknown as { geometry?: { dispose?: () => void }; material?: unknown };
+      o.geometry?.dispose?.();
+      const mat = o.material;
+      if (Array.isArray(mat)) {
+        for (const m of mat) (m as { dispose?: () => void } | null)?.dispose?.();
+      } else {
+        (mat as { dispose?: () => void } | null)?.dispose?.();
+      }
+    });
   }
 }

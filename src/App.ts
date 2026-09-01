@@ -75,6 +75,7 @@ export class App {
   private readonly viewport: ViewportWatcher;
 
   private started = false;
+  private readonly isDesktop = !!(window as unknown as { mvDesktop?: boolean }).mvDesktop;
   private corsWarned = false;
   private wakeLock: WakeLockSentinel | null = null;
   private fpsAccum = 0;
@@ -97,6 +98,13 @@ export class App {
     });
     this.engine.onEnded = () => {
       this.started = false;
+      if (this.isDesktop) {
+        // A device change (e.g. plugging in headphones) ends the loopback stream —
+        // auto-reconnect instead of dropping to the picker.
+        this.shell.toast('Audio device changed — reconnecting…');
+        void this.startDesktopAudio();
+        return;
+      }
       this.shell.showOverlay();
       this.shell.setStatus('The source ended — pick another to continue.');
     };
@@ -195,12 +203,18 @@ export class App {
   startDesktopIdle(): void {
     this.shell.hideOverlay();
     this.loop.start();
+    this.shell.toast('Esc to exit · ⚙️ for controls');
   }
 
   /** Desktop mode: auto-capture system audio (WASAPI loopback, granted by the Electron shell). */
   async startDesktopAudio(): Promise<void> {
-    await this.connect('display');
-    if (!this.started) this.shell.showOverlay(); // capture failed → let the user pick a source
+    // Retry a few times — capture can transiently fail right at launch or during a
+    // device change before the new default device is ready.
+    for (let attempt = 0; attempt < 3 && !this.started; attempt++) {
+      if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 700));
+      await this.connect('display');
+    }
+    if (!this.started) this.shell.showOverlay(); // gave up → let the user pick a source manually
   }
 
   /** Switch preset by id at runtime (used by deep-links / smoke tests). */

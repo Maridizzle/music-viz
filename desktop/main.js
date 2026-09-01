@@ -1,7 +1,7 @@
 // Electron shell that turns the web visualizer into a Windows desktop screensaver
 // which reacts to whatever is playing on the PC (Spotify, YouTube, games, …) with
 // no setup, by capturing system audio through WASAPI loopback.
-const { app, BrowserWindow, protocol, desktopCapturer } = require('electron');
+const { app, BrowserWindow, protocol, desktopCapturer, powerSaveBlocker } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -94,27 +94,44 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
-  protocol.handle('app', (request) => {
-    let pathname = decodeURIComponent(new URL(request.url).pathname);
-    if (!pathname || pathname === '/') pathname = '/index.html';
-    const filePath = path.join(WEB_DIR, path.normalize(pathname));
-    // Never serve outside the bundle directory.
-    if (!filePath.startsWith(WEB_DIR)) return new Response('Forbidden', { status: 403 });
-    try {
-      const data = fs.readFileSync(filePath);
-      const type = MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
-      return new Response(data, { headers: { 'content-type': type } });
-    } catch {
-      return new Response('Not found', { status: 404 });
+// Only one instance — a second launch focuses the existing window instead of
+// stacking another fullscreen visualizer on top.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.focus();
     }
   });
 
-  createWindow();
+  app.whenReady().then(() => {
+    protocol.handle('app', (request) => {
+      let pathname = decodeURIComponent(new URL(request.url).pathname);
+      if (!pathname || pathname === '/') pathname = '/index.html';
+      const filePath = path.join(WEB_DIR, path.normalize(pathname));
+      // Never serve outside the bundle directory.
+      if (!filePath.startsWith(WEB_DIR)) return new Response('Forbidden', { status: 403 });
+      try {
+        const data = fs.readFileSync(filePath);
+        const type = MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
+        return new Response(data, { headers: { 'content-type': type } });
+      } catch {
+        return new Response('Not found', { status: 404 });
+      }
+    });
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    // Keep the display awake — it's a screensaver; the monitor must not sleep and
+    // the OS screensaver must not start on top of it.
+    powerSaveBlocker.start('prevent-display-sleep');
+
+    createWindow();
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
   });
-});
 
-app.on('window-all-closed', () => app.quit());
+  app.on('window-all-closed', () => app.quit());
+}
