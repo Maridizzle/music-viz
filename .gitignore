@@ -10,3 +10,4 @@ dist-ssr
 desktop/web
 desktop/release
 desktop/build-icon/size_*.png
+desktop/build-icon/icon.ico
