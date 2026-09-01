@@ -73,7 +73,8 @@ The ⚙️ panel adjusts everything live and remembers it (localStorage):
 
 - **Audio** — sensitivity, smoothing, FFT resolution, per‑band (bass/mid/treble)
   emphasis, beat sensitivity.
-- **Visual** — preset, colour palette, hue/saturation, **RGB rotate** (auto‑cycle
+- **Visual** — preset, **auto‑shuffle** (jump to a random preset every N seconds,
+  default 5 min), colour palette, hue/saturation, **RGB rotate** (auto‑cycle
   colours through the spectrum) + speed, background, bloom, a **beat camera**
   (global dolly‑punch + shake that reacts across every preset) with zoom/shake
   amounts, and a render‑scale slider for performance.

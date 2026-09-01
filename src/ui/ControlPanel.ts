@@ -74,6 +74,8 @@ export class ControlPanel {
       this.hooks.onPresetChange(this.settings.visual.preset);
       this.rebuildPresetFolder();
     });
+    visual.addBinding(this.settings.visual, 'autoShuffle', { label: 'Auto-shuffle' });
+    visual.addBinding(this.settings.visual, 'shuffleSeconds', { label: 'Shuffle every (s)', min: 10, max: 1800, step: 5 });
     visual.addBinding(this.settings.visual, 'palette', { label: 'Palette', options: toOptions(paletteNames()) });
     visual.addBinding(this.settings.visual, 'hue', { label: 'Hue shift', min: 0, max: 1, step: 0.005 });
     visual.addBinding(this.settings.visual, 'saturation', { label: 'Saturation', min: 0, max: 2, step: 0.01 });
@@ -115,6 +117,12 @@ export class ControlPanel {
       }
     }
     this.presetFolder = folder;
+  }
+
+  /** Reflect a preset change made programmatically (e.g. auto-shuffle) in the UI. */
+  syncPreset(): void {
+    this.pane.refresh();
+    this.rebuildPresetFolder();
   }
 
   /** Rebuild the whole pane from the current settings object (used after a reset). */
