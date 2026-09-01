@@ -33,6 +33,19 @@ import { Matrix } from './visual/presets/Matrix';
 import { PlasmaGlobe } from './visual/presets/PlasmaGlobe';
 import { PianoRoll } from './visual/presets/PianoRoll';
 import { GuitarHero } from './visual/presets/GuitarHero';
+import { Boids } from './visual/presets/Boids';
+import { Fluid } from './visual/presets/Fluid';
+import { Spectrogram } from './visual/presets/Spectrogram';
+import { BlackHole } from './visual/presets/BlackHole';
+import { Wormhole } from './visual/presets/Wormhole';
+import { FractalZoom } from './visual/presets/FractalZoom';
+import { Ferrofluid } from './visual/presets/Ferrofluid';
+import { Cymatics } from './visual/presets/Cymatics';
+import { Oscilloscope } from './visual/presets/Oscilloscope';
+import { Ribbons } from './visual/presets/Ribbons';
+import { Vortex } from './visual/presets/Vortex';
+import { CitySkyline } from './visual/presets/CitySkyline';
+import { DNAHelix } from './visual/presets/DNAHelix';
 
 function describeError(e: unknown): string {
   if (e instanceof Error) {
@@ -115,6 +128,19 @@ export class App {
       new PlasmaGlobe(),
       new PianoRoll(),
       new GuitarHero(),
+      new Boids(),
+      new Fluid(),
+      new Spectrogram(),
+      new BlackHole(),
+      new Wormhole(),
+      new FractalZoom(),
+      new Ferrofluid(),
+      new Cymatics(),
+      new Oscilloscope(),
+      new Ribbons(),
+      new Vortex(),
+      new CitySkyline(),
+      new DNAHelix(),
     ]) {
       this.manager.register(preset);
     }
@@ -161,6 +187,18 @@ export class App {
   start(): void {
     this.shell.showOverlay();
     this.loop.start(); // idle visuals run behind the overlay
+  }
+
+  /** Desktop (Electron) screensaver mode: run ambient visuals with no source overlay. */
+  startDesktopIdle(): void {
+    this.shell.hideOverlay();
+    this.loop.start();
+  }
+
+  /** Desktop mode: auto-capture system audio (WASAPI loopback, granted by the Electron shell). */
+  async startDesktopAudio(): Promise<void> {
+    await this.connect('display');
+    if (!this.started) this.shell.showOverlay(); // capture failed → let the user pick a source
   }
 
   /** Switch preset by id at runtime (used by deep-links / smoke tests). */
@@ -255,6 +293,7 @@ export class App {
       radius: s.visual.bloomRadius,
       threshold: s.visual.bloomThreshold,
     });
+    this.manager.setCameraDynamics(s.visual.cameraDynamics, s.visual.cameraZoom, s.visual.cameraShake);
     this.viewport.setDprCap(s.visual.resolution);
 
     saveSettings(s);

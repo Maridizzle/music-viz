@@ -84,6 +84,9 @@ export class ControlPanel {
     visual.addBinding(this.settings.visual, 'bloomStrength', { label: 'Bloom strength', min: 0, max: 3, step: 0.01 });
     visual.addBinding(this.settings.visual, 'bloomRadius', { label: 'Bloom radius', min: 0, max: 1.5, step: 0.01 });
     visual.addBinding(this.settings.visual, 'bloomThreshold', { label: 'Bloom threshold', min: 0, max: 1, step: 0.01 });
+    visual.addBinding(this.settings.visual, 'cameraDynamics', { label: 'Beat camera' });
+    visual.addBinding(this.settings.visual, 'cameraZoom', { label: 'Camera zoom', min: 0, max: 2, step: 0.01 });
+    visual.addBinding(this.settings.visual, 'cameraShake', { label: 'Camera shake', min: 0, max: 2, step: 0.01 });
     visual.addBinding(this.settings.visual, 'resolution', { label: 'Render scale', min: 0.5, max: 2, step: 0.05 });
     visual.addButton({ title: 'Reset to defaults' }).on('click', () => this.hooks.onReset());
 

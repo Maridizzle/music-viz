@@ -25,6 +25,19 @@ import { SCHEMA as MatrixSchema } from '../visual/presets/Matrix';
 import { SCHEMA as PlasmaSchema } from '../visual/presets/PlasmaGlobe';
 import { SCHEMA as PianoSchema } from '../visual/presets/PianoRoll';
 import { SCHEMA as GuitarSchema } from '../visual/presets/GuitarHero';
+import { SCHEMA as BoidsSchema } from '../visual/presets/Boids';
+import { SCHEMA as FluidSchema } from '../visual/presets/Fluid';
+import { SCHEMA as SpectrogramSchema } from '../visual/presets/Spectrogram';
+import { SCHEMA as BlackHoleSchema } from '../visual/presets/BlackHole';
+import { SCHEMA as WormholeSchema } from '../visual/presets/Wormhole';
+import { SCHEMA as FractalSchema } from '../visual/presets/FractalZoom';
+import { SCHEMA as FerrofluidSchema } from '../visual/presets/Ferrofluid';
+import { SCHEMA as CymaticsSchema } from '../visual/presets/Cymatics';
+import { SCHEMA as OscilloscopeSchema } from '../visual/presets/Oscilloscope';
+import { SCHEMA as RibbonsSchema } from '../visual/presets/Ribbons';
+import { SCHEMA as VortexSchema } from '../visual/presets/Vortex';
+import { SCHEMA as CitySchema } from '../visual/presets/CitySkyline';
+import { SCHEMA as DNASchema } from '../visual/presets/DNAHelix';
 
 export interface AudioSettings {
   gain: number;
@@ -49,6 +62,9 @@ export interface VisualSettings {
   resolution: number; // devicePixelRatio cap
   rgbRotate: boolean; // auto-cycle colours through the spectrum
   rgbSpeed: number; // hue cycles per second
+  cameraDynamics: boolean; // global beat-reactive camera dolly/shake
+  cameraZoom: number; // dolly-punch intensity (0 = off)
+  cameraShake: number; // shake intensity (0 = off)
 }
 
 export interface Settings {
@@ -88,6 +104,19 @@ export function defaultPresetParams(): Record<string, PresetParams> {
     plasmaglobe: defaultsFromSchema(PlasmaSchema),
     pianoroll: defaultsFromSchema(PianoSchema),
     guitarhero: defaultsFromSchema(GuitarSchema),
+    boids: defaultsFromSchema(BoidsSchema),
+    fluid: defaultsFromSchema(FluidSchema),
+    spectrogram: defaultsFromSchema(SpectrogramSchema),
+    blackhole: defaultsFromSchema(BlackHoleSchema),
+    wormhole: defaultsFromSchema(WormholeSchema),
+    fractal: defaultsFromSchema(FractalSchema),
+    ferrofluid: defaultsFromSchema(FerrofluidSchema),
+    cymatics: defaultsFromSchema(CymaticsSchema),
+    oscilloscope: defaultsFromSchema(OscilloscopeSchema),
+    ribbons: defaultsFromSchema(RibbonsSchema),
+    vortex: defaultsFromSchema(VortexSchema),
+    city: defaultsFromSchema(CitySchema),
+    dna: defaultsFromSchema(DNASchema),
   };
 }
 
@@ -117,6 +146,9 @@ export function defaultSettings(): Settings {
       resolution: mobile ? 1.5 : 2,
       rgbRotate: false,
       rgbSpeed: 0.1,
+      cameraDynamics: true,
+      cameraZoom: 1,
+      cameraShake: 1,
     },
     presetParams: defaultPresetParams(),
   };

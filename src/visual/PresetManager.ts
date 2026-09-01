@@ -11,6 +11,8 @@ export interface BloomSettings {
   threshold: number;
 }
 
+const CAM_BASE_Z = 3.8;
+
 /** Owns the single renderer/scene/camera/composer and swaps the active preset. */
 export class PresetManager {
   readonly renderer: THREE.WebGLRenderer;
@@ -26,6 +28,12 @@ export class PresetManager {
   private paletteColors: string[] = getPalette('Neon').colors;
   private readonly style: VisualStyle;
   private readonly bg = new THREE.Color('#05060a');
+
+  // Global beat-reactive camera dolly/shake, applied over whatever the preset draws.
+  private camDyn = { enabled: true, zoom: 1, shake: 1 };
+  private camPunch = 0;
+  private camLevel = 0;
+  private readonly camSeed = Math.random() * 100;
 
   constructor(parent: HTMLElement, width: number, height: number, dpr: number) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -76,6 +84,7 @@ export class PresetManager {
       this.active.dispose();
       this.clearScene();
     }
+    this.resetCamera(); // preset init/resize measures against the base camera
     this.active = next;
     this.activeParams = params;
     next.init(this.context(), params);
@@ -97,6 +106,14 @@ export class PresetManager {
     this.style.hue = hue;
   }
 
+  /** Global beat-reactive camera dolly + shake, applied on top of every preset. */
+  setCameraDynamics(enabled: boolean, zoom: number, shake: number): void {
+    this.camDyn.enabled = enabled;
+    this.camDyn.zoom = zoom;
+    this.camDyn.shake = shake;
+    if (!enabled) this.resetCamera();
+  }
+
   setBackground(color: string): void {
     this.bg.set(color);
   }
@@ -107,6 +124,7 @@ export class PresetManager {
 
   render(frame: AudioFrame, dt: number, t: number): void {
     if (this.active) this.active.update(frame, this.activeParams, dt, t);
+    this.updateCamera(frame, dt, t);
     this.composer.render();
   }
 
@@ -117,7 +135,32 @@ export class PresetManager {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.composer.setSize(width, height, dpr);
+    this.resetCamera(); // fullscreen-plane presets size to the base camera distance
     this.active?.resize(width, height, dpr);
+  }
+
+  private resetCamera(): void {
+    this.camPunch = 0;
+    this.camLevel = 0;
+    this.camera.position.set(0, 0, CAM_BASE_Z);
+    this.camera.rotation.z = 0;
+    this.camera.lookAt(0, 0, 0);
+  }
+
+  private updateCamera(frame: AudioFrame, dt: number, t: number): void {
+    if (!this.camDyn.enabled) return;
+    this.camPunch = Math.max(this.camPunch * (1 - dt * 3.5), frame.beat ? frame.beatEnergy : 0);
+    this.camLevel += (frame.level - this.camLevel) * Math.min(1, dt * 6);
+    const { zoom, shake } = this.camDyn;
+    // Dolly only ever moves *closer* than the base distance, so fullscreen-plane
+    // presets keep over-filling the frustum and never reveal an edge.
+    const z = CAM_BASE_Z * (1 - zoom * (0.11 * this.camPunch + 0.04 * this.camLevel));
+    const amp = shake * this.camPunch * 0.09;
+    const nx = Math.sin(t * 37 + this.camSeed) * 0.6 + Math.sin(t * 19.3) * 0.4;
+    const ny = Math.sin(t * 31.7 + this.camSeed * 1.7) * 0.6 + Math.sin(t * 23.1) * 0.4;
+    this.camera.position.set(nx * amp, ny * amp, z);
+    this.camera.lookAt(0, 0, 0);
+    this.camera.rotation.z += Math.sin(t * 27.4 + this.camSeed) * amp * 0.15;
   }
 
   dispose(): void {

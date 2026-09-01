@@ -23,7 +23,7 @@ so the visualizer reacts to one of three sources you pick in-app:
 
 ## Presets & controls
 
-Twenty-six switchable 3D presets:
+Thirty-nine switchable 3D presets:
 
 - **Ico Blob** — audio‑displaced icosahedron
 - **Particle Field** — GPU point cloud
@@ -51,6 +51,19 @@ Twenty-six switchable 3D presets:
 - **Plasma Globe** — a glass sphere with electric tendrils wandering to its surface
 - **Piano Roll** — synthesia-style notes scrolling onto a light-up keyboard
 - **Guitar Hero** — a 5-lane note highway with gems flying at the screen
+- **Boids Swarm** — a flock of neon darts that shoals to the music and bursts apart on beats
+- **Fluid Smoke** — billowing curl‑noise smoke that advects, swirls and lights up with the sound
+- **Spectrogram** — a scrolling waterfall of the live spectrum (frequency ✕ time)
+- **Black Hole** — an accretion disk orbiting a dark event horizon, with a photon ring
+- **Wormhole** — a fly‑through tunnel of ringed, noise‑textured walls twisting inward
+- **Fractal Zoom** — a morphing Julia set that breathes and zooms, pulsing with the bass
+- **Ferrofluid** — a magnetic blob sprouting spikes to the treble, pulsing to the bass
+- **Cymatics** — Chladni nodal‑line patterns whose mode numbers ride the frequency bands
+- **Oscilloscope** — the raw waveform drawn as a glowing scope / Lissajous figure
+- **Ribbons** — silky trailing ribbons flowing on a curl field, brightening with the music
+- **Vortex** — a whirlpool of points spiralling inward and flung outward on beats
+- **City Skyline** — a neon city fly‑through where the buildings are the spectrum bars
+- **DNA Helix** — a rotating double helix whose ladder rungs light up per frequency band
 
 An adaptive **auto‑gain** stage normalizes the bass/mid/treble/level metrics against
 the track's own recent dynamics, so every preset uses the full range and stays
@@ -61,12 +74,24 @@ The ⚙️ panel adjusts everything live and remembers it (localStorage):
 - **Audio** — sensitivity, smoothing, FFT resolution, per‑band (bass/mid/treble)
   emphasis, beat sensitivity.
 - **Visual** — preset, colour palette, hue/saturation, **RGB rotate** (auto‑cycle
-  colours through the spectrum) + speed, background, bloom, and a render‑scale
-  slider for performance.
+  colours through the spectrum) + speed, background, bloom, a **beat camera**
+  (global dolly‑punch + shake that reacts across every preset) with zoom/shake
+  amounts, and a render‑scale slider for performance.
 - **Per‑preset** parameters, generated automatically from each preset.
 
 Plus a fullscreen button, wake‑lock (keeps the screen on while playing), and a
 live FPS / BPM readout.
+
+## Desktop screensaver (Windows)
+
+There's also a **downloadable Windows desktop app** that runs the visualizer
+fullscreen and reacts to **whatever is playing on your PC** (Spotify, YouTube, a
+game…) with **no setup** — it captures system audio via WASAPI **loopback**, so
+you never have to share a tab or enable "Stereo Mix".
+
+Grab it from the repo's **Actions → "Build Windows desktop app"** → latest run →
+the **`MusicVisualizer-Windows`** artifact (an installer and a portable `.exe`).
+Full details and build-it-yourself steps are in [`desktop/README.md`](desktop/README.md).
 
 ## Develop
 
