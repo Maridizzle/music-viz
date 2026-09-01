@@ -1,10 +1,17 @@
 name: Build Windows desktop app
 
-# Produces the downloadable Windows screensaver (.exe) on a real Windows runner.
-# Run it manually from the Actions tab (Run workflow), or push a v* tag to also
-# attach the installers to a GitHub Release.
+# Builds the downloadable Windows screensaver (.exe) on a real Windows runner.
+# - Run manually (Actions → Run workflow) to just build the artifact.
+# - Run manually with a "release_tag" (e.g. v0.1.0) to also create a public GitHub
+#   Release with the installers attached — a permanent, shareable download link.
+# - Pushing a v* tag does the same automatically.
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Publish a public Release with this tag (e.g. v0.1.0). Leave blank to build the artifact only.'
+        required: false
+        default: ''
   push:
     tags: ['v*']
 
@@ -42,8 +49,20 @@ jobs:
           path: desktop/release/*.exe
           if-no-files-found: error
 
-      - name: Attach to release (tags only)
-        if: startsWith(github.ref, 'refs/tags/')
+      # Create/attach a public Release when a tag was pushed, or when a release_tag
+      # input was supplied to a manual run. softprops creates the tag if it's new.
+      - name: Publish Release
+        if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != '')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag) || github.ref_name }}
+          name: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag) || github.ref_name }}
           files: desktop/release/*.exe
+          body: |
+            **Music Visualizer** — a Windows desktop screensaver that reacts to whatever is playing on your PC (Spotify, YouTube, games) with no setup, by capturing system audio via WASAPI loopback. 39 audio-reactive presets, a global beat camera, and auto-shuffle.
+
+            **Download** one of the assets below:
+            - **Music Visualizer Setup … .exe** — installer (adds Start Menu / desktop shortcuts).
+            - **MusicVisualizer-…-portable.exe** — single file, no install.
+
+            The build is unsigned, so Windows SmartScreen shows a one-time warning: **More info → Run anyway**. Then just play music — it reacts automatically. Esc quits, F11 toggles fullscreen, ⚙️ switches presets.
