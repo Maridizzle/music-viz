@@ -85,14 +85,18 @@ live FPS / BPM readout.
 
 ## Desktop screensaver (Windows)
 
-There's also a **downloadable Windows desktop app** that runs the visualizer
-fullscreen and reacts to **whatever is playing on your PC** (Spotify, YouTube, a
-game…) with **no setup** — it captures system audio via WASAPI **loopback**, so
-you never have to share a tab or enable "Stereo Mix".
+There's also a **downloadable Windows desktop app** that behaves like a real
+**screensaver**: it sits in the system tray, and after a configurable idle timeout
+it takes over the screen with the fullscreen visualizer reacting to **whatever is
+playing on your PC** (Spotify, YouTube, a game…) with **no setup** — it captures
+system audio via WASAPI **loopback**, so you never have to share a tab or enable
+"Stereo Mix". Any input dismisses it; the tray menu sets the timeout, opens it
+interactively, and can start it with Windows.
 
-Grab it from the repo's **Actions → "Build Windows desktop app"** → latest run →
-the **`MusicVisualizer-Windows`** artifact (an installer and a portable `.exe`).
-Full details and build-it-yourself steps are in [`desktop/README.md`](desktop/README.md).
+Grab it from the repo's **[Releases](https://github.com/Maridizzle/music-viz/releases)**
+(installer + portable `.exe`), or from **Actions → "Build Windows desktop app"** → the
+latest run's **`MusicVisualizer-Windows`** artifact. Full details and build-it-yourself
+steps are in [`desktop/README.md`](desktop/README.md).
 
 ## Develop
 

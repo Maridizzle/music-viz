@@ -21,14 +21,25 @@ The installers are built by CI on a real Windows runner:
 
 > Tagging a commit `v*` (e.g. `v0.1.0`) also attaches these files to a GitHub Release.
 
-## Use it
+## Use it — it's a screensaver
 
-- Launch it, then just play music — the visuals react automatically.
-- **⚙️** (top-right) opens the control panel: switch between the 39 presets, palette,
-  bloom, the beat camera, etc.
-- **🎵** re-opens the source picker if you want mic / a specific tab instead.
-- **F11** toggles fullscreen · **Esc** (or **Ctrl+Q**) quits · the cursor hides after
-  a few idle seconds.
+Launch it and it lives in the **system tray** (bottom-right, by the clock), watching
+Windows' idle timer. After your chosen number of minutes with no mouse/keyboard, it
+takes over the screen with the fullscreen visualizer reacting to whatever's playing.
+**Any input dismisses it** back to the tray. (First launch also opens it once so you
+can see it works.)
+
+**Right-click the tray icon** for:
+
+- **Start screensaver now** — trigger it immediately.
+- **Open visualizer** — an interactive window (not dismissed on input) where **⚙️**
+  switches the 39 presets / palette / beat camera / **auto-shuffle**, **🎵** changes
+  the audio source, **F11** toggles fullscreen, and **Esc** closes it.
+- **Start after…** — the idle timeout (1 / 3 / 5 / 10 / 15 / 30 min).
+- **Start with Windows** — launch automatically at login, so it's always watching.
+- **Quit** — stop the app entirely.
+
+Just play music (Spotify, YouTube, a game…) and it reacts automatically — no setup.
 
 ## Build it yourself
 

@@ -199,11 +199,11 @@ export class App {
     this.loop.start(); // idle visuals run behind the overlay
   }
 
-  /** Desktop (Electron) screensaver mode: run ambient visuals with no source overlay. */
-  startDesktopIdle(): void {
+  /** Desktop (Electron) mode: run ambient visuals with no source overlay. */
+  startDesktopIdle(screensaver = false): void {
     this.shell.hideOverlay();
     this.loop.start();
-    this.shell.toast('Esc to exit · ⚙️ for controls');
+    this.shell.toast(screensaver ? 'Move the mouse or press a key to exit' : 'Esc or close to exit · ⚙️ for presets');
   }
 
   /** Desktop mode: auto-capture system audio (WASAPI loopback, granted by the Electron shell). */
