@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #wrap { width: 100vw; height: 100vh; }
+  svg { display: block; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <svg id="icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bg" cx="50%" cy="38%" r="80%">
+        <stop offset="0%" stop-color="#1b2040" />
+        <stop offset="55%" stop-color="#0a0c1a" />
+        <stop offset="100%" stop-color="#050609" />
+      </radialGradient>
+      <linearGradient id="bar" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0%" stop-color="#ff3ea5" />
+        <stop offset="52%" stop-color="#8a5cff" />
+        <stop offset="100%" stop-color="#25e0ff" />
+      </linearGradient>
+      <filter id="halo" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="6.5" />
+      </filter>
+    </defs>
+
+    <!-- dark rounded tile -->
+    <rect x="16" y="16" width="480" height="480" rx="116" fill="url(#bg)" />
+    <rect x="17" y="17" width="478" height="478" rx="115" fill="none"
+          stroke="#3a4390" stroke-opacity="0.55" stroke-width="2" />
+
+    <g id="reflection"></g>
+    <g id="bars" filter="url(#halo)" opacity="0.9"></g>
+    <g id="barsSharp"></g>
+    <rect id="baseline" x="55" y="378" width="402" height="6" rx="3" fill="#25e0ff" opacity="0.55" filter="url(#halo)" />
+  </svg>
+</div>
+<script>
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (n, at) => { const e = document.createElementNS(NS, n); for (const k in at) e.setAttribute(k, at[k]); return e; };
+
+  const heights = [0.55, 0.9, 0.68, 1.0, 0.6];
+  const n = heights.length, bw = 52, gap = 33, maxH = 224, baseY = 378;
+  const total = n * bw + (n - 1) * gap;
+  const x0 = 256 - total / 2;
+
+  const bars = document.getElementById('bars');
+  const sharp = document.getElementById('barsSharp');
+  const refl = document.getElementById('reflection');
+
+  for (let i = 0; i < n; i++) {
+    const x = x0 + i * (bw + gap);
+    const h = heights[i] * maxH;
+    const y = baseY - h;
+    for (const grp of [bars, sharp]) {
+      grp.appendChild(el('rect', { x, y, width: bw, height: h, rx: bw / 2, fill: 'url(#bar)' }));
+    }
+    // faint reflection under the baseline
+    const rh = h * 0.28;
+    refl.appendChild(el('rect', { x, y: baseY + 8, width: bw, height: rh, rx: bw / 2, fill: '#25e0ff', opacity: 0.1 }));
+  }
+</script>
+</body>
+</html>
