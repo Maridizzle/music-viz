@@ -65,6 +65,8 @@ export interface VisualSettings {
   cameraDynamics: boolean; // global beat-reactive camera dolly/shake
   cameraZoom: number; // dolly-punch intensity (0 = off)
   cameraShake: number; // shake intensity (0 = off)
+  autoShuffle: boolean; // auto-switch to a random preset on an interval
+  shuffleSeconds: number; // seconds between auto-switches
 }
 
 export interface Settings {
@@ -149,6 +151,8 @@ export function defaultSettings(): Settings {
       cameraDynamics: true,
       cameraZoom: 1,
       cameraShake: 1,
+      autoShuffle: false,
+      shuffleSeconds: 300,
     },
     presetParams: defaultPresetParams(),
   };

@@ -80,6 +80,7 @@ export class App {
   private fpsAccum = 0;
   private fpsFrames = 0;
   private huePhase = 0;
+  private shuffleAccum = 0;
   private lastFrame: { bass: number; mid: number; treble: number; level: number; beat: boolean } | null = null;
 
   constructor(private readonly root: HTMLElement) {
@@ -171,6 +172,7 @@ export class App {
       getSchema: (id) => this.manager.getSchema(id) ?? [],
       onChange: () => this.apply(),
       onPresetChange: (id) => {
+        this.shuffleAccum = 0;
         this.manager.setPreset(id, this.settings.presetParams[id]!);
         saveSettings(this.settings);
       },
@@ -204,9 +206,26 @@ export class App {
   /** Switch preset by id at runtime (used by deep-links / smoke tests). */
   setPreset(id: string): void {
     if (!this.manager.getSchema(id)) return;
+    this.shuffleAccum = 0;
     this.settings.visual.preset = id;
     this.manager.setPreset(id, this.settings.presetParams[id]!);
     saveSettings(this.settings);
+  }
+
+  /** Auto-shuffle: jump to a random preset different from the current one. */
+  private shuffleToRandomPreset(): void {
+    const list = this.manager.list();
+    if (list.length < 2) return;
+    const current = this.settings.visual.preset;
+    let pick = current;
+    for (let i = 0; i < 12 && pick === current; i++) {
+      pick = list[Math.floor(Math.random() * list.length)]!.id;
+    }
+    this.settings.visual.preset = pick;
+    this.manager.setPreset(pick, this.settings.presetParams[pick]!);
+    this.panel.syncPreset();
+    saveSettings(this.settings);
+    this.shell.toast(`Shuffled → ${list.find((p) => p.id === pick)?.label ?? pick}`);
   }
 
   /** Debug/test hooks (only reachable via the ?debug window handle). */
@@ -254,6 +273,16 @@ export class App {
     if (this.settings.visual.rgbRotate) {
       this.huePhase = (this.huePhase + dt * this.settings.visual.rgbSpeed) % 1;
       this.manager.setHue((this.settings.visual.hue + this.huePhase) % 1);
+    }
+
+    if (this.settings.visual.autoShuffle) {
+      this.shuffleAccum += dt;
+      if (this.shuffleAccum >= Math.max(5, this.settings.visual.shuffleSeconds)) {
+        this.shuffleAccum = 0;
+        this.shuffleToRandomPreset();
+      }
+    } else if (this.shuffleAccum !== 0) {
+      this.shuffleAccum = 0;
     }
 
     this.manager.render(frame, dt, t);
