@@ -43,6 +43,7 @@ must sit at the root of the zip, not inside a subfolder.
   `Arguments`: Lively rewrites it to a second `--wallpaper-audio` option, the player
   refuses duplicate options, and Lively shows "Error initializing. Unknown options
   are passed." (the wiki's `--audio` advice predates the `webaudio` type).
+  `--system-nowplaying` is safe there: Lively does not add that one itself.
 - `src/audio/livelyBridge.ts` defines the global `livelyAudioListener(audioArray)`
   that Lively calls with the 128 bands.
 - `AudioEngine.useExternalSpectrum()` rebuilds the byte spectrum and a stand-in
@@ -53,8 +54,13 @@ must sit at the root of the zip, not inside a subfolder.
 
 ## Notes
 
-- The Spotify now-playing card and album colours are not part of this mode yet.
-  Lively offers a `livelyCurrentTrack` callback that could provide them later.
+- **Cover colours:** `"Arguments": "--system-nowplaying"` makes Lively (2.0.6.0 or
+  newer) also call `livelyCurrentTrack(data)` with what Windows' media controls
+  report for the active player, cover art included, so the visuals recolour from
+  the album of whatever is playing, with no Spotify login. Works for any player
+  that publishes to Windows' media controls (the same info as the volume popup).
+  The gear panel's **Album colours** toggle (under Spotify) turns it off. No
+  now-playing card is shown on the desktop.
 - Lively pauses wallpapers while a fullscreen app runs (its own performance
   setting); the visualizer picks up again when the desktop is visible.
 - Preset, palette and other settings are the same saved settings the interactive

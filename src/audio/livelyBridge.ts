@@ -43,6 +43,7 @@ export function installLivelyBridge(onFirstData?: () => void): void {
   onFirst = onFirstData ?? null;
   (window as unknown as { livelyAudioListener?: typeof livelyAudioListener }).livelyAudioListener =
     livelyAudioListener;
+  if (!onTrack) onLivelyTrack(null); // expose the global even before anyone subscribes
 }
 
 /** True once Lively has delivered audio at least once. */
@@ -58,4 +59,65 @@ export function livelySpectrum(): Float32Array {
 /** Milliseconds since Lively last pushed audio; Infinity if never. */
 export function livelySilenceMs(): number {
   return seen ? performance.now() - lastCallMs : Infinity;
+}
+
+// ---- now playing ----
+//
+// With `"Arguments": "--system-nowplaying"` in LivelyInfo.json (Lively 2.0.6.0+),
+// Lively also calls `livelyCurrentTrack(data)` with what Windows' media controls
+// report for the active player (the same info as the volume popup): title, artist,
+// album and the cover as a bare base64 string (no data: prefix, format unspecified).
+// It sends null when playback stops, and re-sends the current track when the
+// wallpaper resumes from pause.
+
+export interface LivelyTrack {
+  Title?: string | null;
+  Artist?: string | null;
+  AlbumArtist?: string | null;
+  AlbumTitle?: string | null;
+  Thumbnail?: string | null;
+  PlaybackType?: string | number | null;
+  TrackNumber?: number | null;
+  Genres?: string[] | null;
+}
+
+let onTrack: ((track: LivelyTrack | null) => void) | null = null;
+
+function livelyCurrentTrack(data: LivelyTrack | null | undefined): void {
+  onTrack?.(data && typeof data === 'object' ? data : null);
+}
+
+/** Subscribe to Lively's now-playing updates (null = nothing playing). */
+export function onLivelyTrack(cb: ((track: LivelyTrack | null) => void) | null): void {
+  onTrack = cb;
+  (window as unknown as { livelyCurrentTrack?: typeof livelyCurrentTrack }).livelyCurrentTrack =
+    livelyCurrentTrack;
+}
+
+/**
+ * The cover as a data: URL, or null. The image format is sniffed from the base64
+ * head (PNG / JPEG / GIF / WebP / BMP) since Lively does not say which it is.
+ */
+export function livelyCoverUrl(track: LivelyTrack | null): string | null {
+  const b64 = track?.Thumbnail;
+  if (!b64 || typeof b64 !== 'string') return null;
+  if (b64.startsWith('data:')) return b64;
+  const mime = b64.startsWith('iVBORw0KGgo')
+    ? 'image/png'
+    : b64.startsWith('/9j/')
+      ? 'image/jpeg'
+      : b64.startsWith('R0lGOD')
+        ? 'image/gif'
+        : b64.startsWith('UklGR')
+          ? 'image/webp'
+          : b64.startsWith('Qk')
+            ? 'image/bmp'
+            : 'image/png';
+  return `data:${mime};base64,${b64}`;
+}
+
+/** A stable key for "is this the same song as before" (Lively re-sends on resume). */
+export function livelyTrackKey(track: LivelyTrack | null): string {
+  if (!track) return '';
+  return `${track.Title ?? ''}\u0000${track.Artist ?? ''}\u0000${track.AlbumTitle ?? ''}`;
 }

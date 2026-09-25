@@ -1,6 +1,13 @@
 import { AudioEngine } from './audio/AudioEngine';
 import { hasNativeCapture, startNativeCapture, type NativeCapture } from './audio/androidCapture';
-import { installLivelyBridge, livelySpectrum } from './audio/livelyBridge';
+import {
+  installLivelyBridge,
+  livelyCoverUrl,
+  livelySpectrum,
+  livelyTrackKey,
+  onLivelyTrack,
+} from './audio/livelyBridge';
+import { extractAlbumPalette } from './spotify/albumPalette';
 import { defaultSettings, type Settings } from './state/Settings';
 import { clearSettings, loadSettings, saveSettings } from './state/store';
 import { DEFAULT_SPOTIFY_CLIENT_ID } from './spotify/config';
@@ -305,7 +312,33 @@ export class App {
     this.shell.hideOverlay();
     this.loop.start();
     this.startLivelyAudio();
+    this.listenLivelyTrack();
     this.shell.toast('Lively Wallpaper mode · reacting to system audio');
+  }
+
+  /**
+   * Lively's now-playing feed (Windows media controls): recolour the visuals from
+   * the cover of whatever is playing, as Spotify mode does, honouring the same
+   * "Album colours" toggle. No now-playing card on the desktop, just the colours.
+   */
+  private listenLivelyTrack(): void {
+    let lastKey = '';
+    let token = 0;
+    onLivelyTrack((track) => {
+      const key = livelyTrackKey(track);
+      if (key === lastKey) return; // Lively re-sends the same track on resume
+      lastKey = key;
+      const mine = ++token;
+      const cover = livelyCoverUrl(track);
+      if (!track || !cover || !this.settings.spotify.albumColors) {
+        this.manager.setPaletteOverride(null);
+        return;
+      }
+      void extractAlbumPalette(cover).then((colors) => {
+        if (mine !== token) return; // a newer track arrived meanwhile
+        this.manager.setPaletteOverride(this.settings.spotify.albumColors ? colors : null);
+      });
+    });
   }
 
   /** Route the engine to Lively's audio feed. Also used when Lively hosts a non-Lively build. */
