@@ -330,6 +330,11 @@ export class App {
       lastKey = key;
       const mine = ++token;
       const cover = livelyCoverUrl(track);
+      if (track) {
+        // A brief, self-hiding note so it's visible that Lively delivered the track.
+        const who = [track.Title, track.Artist].filter((s) => !!s).join(' · ');
+        this.shell.toast(`Now playing: ${who || 'unknown track'}${cover ? '' : ' (no cover art)'}`);
+      }
       if (!track || !cover || !this.settings.spotify.albumColors) {
         this.manager.setPaletteOverride(null);
         return;

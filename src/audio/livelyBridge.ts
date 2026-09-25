@@ -83,8 +83,25 @@ export interface LivelyTrack {
 
 let onTrack: ((track: LivelyTrack | null) => void) | null = null;
 
-function livelyCurrentTrack(data: LivelyTrack | null | undefined): void {
-  onTrack?.(data && typeof data === 'object' ? data : null);
+/**
+ * Lively's WebView2 player JSON-serialises every argument it passes to a page
+ * function, and it hands this one a track that is *already* a JSON string, so the
+ * page receives a quoted string (or the string "null"), not an object. Accept
+ * both shapes.
+ */
+function livelyCurrentTrack(data: LivelyTrack | string | null | undefined): void {
+  let track: LivelyTrack | null = null;
+  if (typeof data === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(data);
+      track = parsed && typeof parsed === 'object' ? (parsed as LivelyTrack) : null;
+    } catch {
+      track = null;
+    }
+  } else if (data && typeof data === 'object') {
+    track = data;
+  }
+  onTrack?.(track);
 }
 
 /** Subscribe to Lively's now-playing updates (null = nothing playing). */
