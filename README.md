@@ -3,8 +3,8 @@
 An adjustable **WebGL 3D music visualizer** that reacts to live audio, built for
 both **phone and PC**. It runs entirely in the browser (Three.js + Web Audio API),
 has a touch-friendly control panel, and auto-deploys to GitHub Pages. It also ships
-as a **Windows screensaver app** and an **Android app**, and installs on **iPhone**
-from Safari.
+as a **Windows screensaver app**, a **live desktop wallpaper** (via Lively Wallpaper),
+and an **Android app**, and installs on **iPhone** from Safari.
 
 **Live site:** https://maridizzle.github.io/music-viz/
 
@@ -166,6 +166,17 @@ Grab it from the repo's **[Releases](https://github.com/Maridizzle/music-viz/rel
 latest run's **`MusicVisualizer-Windows`** artifact. Full details and build-it-yourself
 steps are in [`desktop/README.md`](desktop/README.md).
 
+## Live desktop wallpaper (Windows, via Lively)
+
+Prefer the visualizer **as your actual desktop**, all day, behind your icons? Install
+the free, open source **[Lively Wallpaper](https://github.com/rocksdanister/lively)**,
+download **`MusicVisualizer-Lively.zip`** from the
+**[Releases](https://github.com/Maridizzle/music-viz/releases)** page (or from
+**Actions → "Build Lively wallpaper"**), and drag the zip onto Lively. Lively renders
+the visualizer as the wallpaper and feeds it the PC's **system audio** itself, so it
+reacts to Spotify, YouTube, games, anything, with no capture dialog and no mic.
+Details and build-it-yourself steps: [`lively/README.md`](lively/README.md).
+
 ## Develop
 
 ```bash
@@ -218,6 +229,7 @@ src/
   util/      env, viewport, loop                       # platform helpers
   App.ts     wires it all together
 desktop/     Electron shell (Windows screensaver)
+lively/      Lively Wallpaper manifest + notes (live desktop background)
 android/     Capacitor project + native audio-capture plugin
 public/      manifest + icons (installable web app)
 scripts/     icon renderer, headless smoke test

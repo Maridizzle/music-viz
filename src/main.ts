@@ -2,6 +2,7 @@ import './style.css';
 import { App } from './App';
 import { SpotifyAuth } from './spotify/auth';
 import { onAppUrl, platformKind } from './spotify/platform';
+import { installLivelyBridge, isLivelyBuild } from './audio/livelyBridge';
 
 const root = document.getElementById('app');
 if (!root) throw new Error('#app root not found');
@@ -22,7 +23,12 @@ if (callbackUrl) {
 }
 void onAppUrl((url) => void app.completeSpotifyLogin(url));
 
-if (platform === 'desktop') {
+if (isLivelyBuild) {
+  // Lively Wallpaper package (npm run build:lively → dist-lively/). Lively renders
+  // this page as the desktop background and calls window.livelyAudioListener with
+  // the system audio spectrum; nothing to pick, nothing to click. See lively/README.md.
+  app.startLively();
+} else if (platform === 'desktop') {
   // Electron shell. In screensaver mode (?screensaver) it runs as a fullscreen saver
   // dismissed on any input; otherwise it's an interactive window. Either way the main
   // process calls this hook with a synthesized user gesture to auto-start system-audio
@@ -49,6 +55,10 @@ if (platform === 'desktop') {
   }
 } else {
   app.start();
+
+  // If Lively Wallpaper is hosting the plain web build (e.g. the Pages URL added as
+  // a wallpaper), switch to its audio feed the moment it delivers one.
+  installLivelyBridge(() => app.startLivelyAudio());
 
   // iPhone/iPad Safari: once, suggest installing to the Home Screen — that's the
   // "native" experience there (icon, fullscreen, keeps the screen on).

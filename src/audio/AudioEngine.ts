@@ -44,6 +44,8 @@ export class AudioEngine {
   private objectUrl: string | null = null;
   private monitoring = false;
   private current: SourceKind | null = null;
+  /** When set, frames are synthesised from this 0..1 spectrum instead of the analyser (Lively Wallpaper). */
+  private external: (() => ArrayLike<number>) | null = null;
 
   private freq: Uint8Array<ArrayBuffer>;
   private time: Uint8Array<ArrayBuffer>;
@@ -200,6 +202,21 @@ export class AudioEngine {
     audioTracks[0]!.addEventListener('ended', () => this.onEnded?.('display'));
   }
 
+  /**
+   * Feed the engine from an externally computed spectrum instead of Web Audio
+   * (Lively Wallpaper pushes the PC's system audio as 128 bands, 0..1). No
+   * AudioContext, permission or gesture is needed. The bands are assumed to be
+   * linearly spaced from 0 Hz up to Nyquist; the byte spectrum and a stand-in
+   * waveform are rebuilt from them every frame so every preset keeps working.
+   */
+  useExternalSpectrum(get: () => ArrayLike<number>, kind: SourceKind = 'display'): void {
+    this.teardownCurrent();
+    this.external = get;
+    this.current = kind;
+    this.beatDetector.reset();
+    this.silentFrames = 0;
+  }
+
   /** Use an already-obtained MediaStream (e.g. the Android app's native system-audio capture). */
   useMediaStream(stream: MediaStream, kind: SourceKind = 'display'): void {
     this.teardownCurrent();
@@ -251,8 +268,12 @@ export class AudioEngine {
     const nowMs = performance.now();
     const dt = this.agcTime ? Math.min(0.1, (nowMs - this.agcTime) / 1000) : 0.016;
     this.agcTime = nowMs;
-    this.analyser.getByteFrequencyData(this.freq);
-    this.analyser.getByteTimeDomainData(this.time);
+    if (this.external) {
+      this.synthesizeFromExternal(this.external());
+    } else {
+      this.analyser.getByteFrequencyData(this.freq);
+      this.analyser.getByteTimeDomainData(this.time);
+    }
 
     const b = this.bins;
     const bassRaw = averageBand(this.freq, b.bassStart, b.bassEnd);
@@ -295,6 +316,59 @@ export class AudioEngine {
   }
 
   // ---- internals ----
+
+  /**
+   * Rebuild `freq` (byte spectrum) and `time` (byte waveform) from an external
+   * 0..1 band array. The bands are stretched linearly over the analyser's bins with
+   * interpolation and lightly smoothed frame to frame (mirroring the analyser's
+   * smoothingTimeConstant) so the picture doesn't flicker. The waveform is a stand-in
+   * for presets that draw the time domain (e.g. Oscilloscope): a sum of sines built
+   * from the lowest bands, scaled so its RMS matches the spectrum's overall energy.
+   */
+  private synthesizeFromExternal(bands: ArrayLike<number>): void {
+    const freq = this.freq;
+    const time = this.time;
+    const nb = bands.length;
+    const nf = freq.length;
+    const keep = this.analyser.smoothingTimeConstant;
+    let energy = 0;
+    if (nb === 0) {
+      freq.fill(0);
+    } else {
+      for (let i = 0; i < nf; i++) {
+        const pos = (i / Math.max(1, nf - 1)) * (nb - 1);
+        const lo = Math.floor(pos);
+        const hi = Math.min(nb - 1, lo + 1);
+        const t = pos - lo;
+        let v = bands[lo]! * (1 - t) + bands[hi]! * t;
+        v = v < 0 ? 0 : v > 1 ? 1 : v;
+        const target = v * 255;
+        const prev = freq[i]!;
+        freq[i] = Math.round(target > prev ? target : prev * keep + target * (1 - keep));
+      }
+      for (let i = 0; i < nb; i++) {
+        const v = bands[i]!;
+        energy += v * v;
+      }
+    }
+    const level = Math.sqrt(energy / Math.max(1, nb)); // 0..1 RMS across bands
+
+    const HARMONICS = 8;
+    let norm = 0;
+    for (let k = 1; k <= HARMONICS && k < nb; k++) norm += bands[k]! * bands[k]!;
+    const scale = norm > 0 ? (level * Math.SQRT2) / Math.sqrt(norm) : 0;
+    const nt = time.length;
+    for (let i = 0; i < nt; i++) {
+      let s = 0;
+      if (scale > 0) {
+        const ph = (i / nt) * Math.PI * 2;
+        for (let k = 1; k <= HARMONICS && k < nb; k++) s += bands[k]! * Math.sin(ph * k);
+        s *= scale;
+        s = s < -1 ? -1 : s > 1 ? 1 : s;
+      }
+      time[i] = 128 + Math.round(s * 127);
+    }
+  }
 
   private computeBins(): BandBins {
     const sr = this.context.sampleRate;
@@ -365,6 +439,7 @@ export class AudioEngine {
   }
 
   private teardownCurrent(): void {
+    this.external = null;
     if (this.input) {
       try {
         this.input.disconnect();
