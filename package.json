@@ -9,6 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "build:desktop": "tsc --noEmit && cross-env ELECTRON=1 vite build",
     "build:android": "tsc --noEmit && cross-env ANDROID=1 vite build",
+    "build:lively": "tsc --noEmit && cross-env VITE_MV_LIVELY=1 vite build && node scripts/lively-package.mjs",
     "icons": "node scripts/app-icons.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"

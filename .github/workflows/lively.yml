@@ -1,0 +1,55 @@
+name: Build Lively wallpaper
+
+# Builds the Lively Wallpaper package (MusicVisualizer-Lively.zip): the visualizer
+# as a live Windows desktop background reacting to system audio via Lively.
+# - Run manually (Actions → Run workflow) to just build the artifact.
+# - Run manually with a "release_tag" (e.g. v0.3.0) to also attach the zip to a
+#   public GitHub Release (created if new; the desktop/android workflows attach
+#   their files to the same release).
+# - Pushing a v* tag does the same automatically.
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Attach the zip to a public Release with this tag (e.g. v0.3.0). Leave blank to build the artifact only.'
+        required: false
+        default: ''
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build-lively:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build:lively
+
+      - name: Zip the package
+        run: |
+          cd dist-lively
+          zip -r ../MusicVisualizer-Lively.zip .
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: MusicVisualizer-Lively
+          path: MusicVisualizer-Lively.zip
+          if-no-files-found: error
+
+      - name: Publish Release
+        if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != '')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag) || github.ref_name }}
+          name: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag) || github.ref_name }}
+          files: MusicVisualizer-Lively.zip

@@ -1,5 +1,6 @@
 import { AudioEngine } from './audio/AudioEngine';
 import { hasNativeCapture, startNativeCapture, type NativeCapture } from './audio/androidCapture';
+import { installLivelyBridge, livelySpectrum } from './audio/livelyBridge';
 import { defaultSettings, type Settings } from './state/Settings';
 import { clearSettings, loadSettings, saveSettings } from './state/store';
 import { DEFAULT_SPOTIFY_CLIENT_ID } from './spotify/config';
@@ -293,6 +294,34 @@ export class App {
     // A Spotify login from an earlier session carries over: resume it for the
     // album colours + now-playing card (the loopback stays the audio input).
     if (this.started && this.spotify.isConnected() && !this.spotify.isActive) await this.connect('spotify');
+  }
+
+  /**
+   * Lively Wallpaper build: the page *is* the desktop background and Lively pushes
+   * the PC's system audio into it (see audio/livelyBridge.ts), so there is no source
+   * to pick and nothing to click. Start the visuals at once and listen for Lively.
+   */
+  startLively(): void {
+    this.shell.hideOverlay();
+    this.loop.start();
+    this.startLivelyAudio();
+    this.shell.toast('Lively Wallpaper mode · reacting to system audio');
+  }
+
+  /** Route the engine to Lively's audio feed. Also used when Lively hosts a non-Lively build. */
+  startLivelyAudio(): void {
+    installLivelyBridge();
+    if (this.spotify.isActive) {
+      this.spotify.stop();
+      this.shell.nowPlaying.hide();
+      this.panel.syncSpotify();
+    }
+    void this.stopNativeCapture();
+    this.engine.useExternalSpectrum(livelySpectrum, 'display');
+    this.started = true;
+    this.shell.setBusy(false);
+    this.shell.setStatus('');
+    this.shell.hideOverlay();
   }
 
   /** Switch preset by id at runtime (used by deep-links / smoke tests). */
