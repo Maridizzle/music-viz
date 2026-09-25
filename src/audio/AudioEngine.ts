@@ -205,8 +205,11 @@ export class AudioEngine {
   /**
    * Feed the engine from an externally computed spectrum instead of Web Audio
    * (Lively Wallpaper pushes the PC's system audio as 128 bands, 0..1). No
-   * AudioContext, permission or gesture is needed. The bands are assumed to be
-   * linearly spaced from 0 Hz up to Nyquist; the byte spectrum and a stand-in
+   * AudioContext, permission or gesture is needed. Lively's bands are the lowest
+   * 128 bins of a linear FFT over its capture buffer (smoothed, not normalised, so
+   * they are clamped upstream); their exact top frequency depends on that buffer,
+   * so they are stretched linearly across the analyser's bins as an approximation
+   * and the per-band auto-gain evens out the rest. The byte spectrum and a stand-in
    * waveform are rebuilt from them every frame so every preset keeps working.
    */
   useExternalSpectrum(get: () => ArrayLike<number>, kind: SourceKind = 'display'): void {

@@ -1,8 +1,11 @@
 name: Build Lively wallpaper
 
-# Builds the Lively Wallpaper package (MusicVisualizer-Lively.zip): the visualizer
-# as a live Windows desktop background reacting to system audio via Lively.
-# - Run manually (Actions → Run workflow) to just build the artifact.
+# Builds the Lively Wallpaper package: the visualizer as a live Windows desktop
+# background reacting to system audio via Lively.
+# - Run manually (Actions → Run workflow) to build the artifact. Download
+#   "MusicVisualizer-Lively" from the run: GitHub delivers it as a .zip whose root
+#   holds LivelyInfo.json, which is exactly what Lively expects, so drag that .zip
+#   straight onto Lively. (Lively only looks for LivelyInfo.json at the zip root.)
 # - Run manually with a "release_tag" (e.g. v0.3.0) to also attach the zip to a
 #   public GitHub Release (created if new; the desktop/android workflows attach
 #   their files to the same release).
@@ -34,17 +37,20 @@ jobs:
       - run: npm ci
       - run: npm run build:lively
 
-      - name: Zip the package
-        run: |
-          cd dist-lively
-          zip -r ../MusicVisualizer-Lively.zip .
-
+      # Upload the folder's contents, not a zip of it: the artifact download is
+      # itself a zip, and Lively needs LivelyInfo.json at that zip's root.
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: MusicVisualizer-Lively
-          path: MusicVisualizer-Lively.zip
+          path: dist-lively/
           if-no-files-found: error
+
+      - name: Zip the package for the Release
+        if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != '')
+        run: |
+          cd dist-lively
+          zip -r ../MusicVisualizer-Lively.zip .
 
       - name: Publish Release
         if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != '')
@@ -53,3 +59,21 @@ jobs:
           tag_name: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag) || github.ref_name }}
           name: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag) || github.ref_name }}
           files: MusicVisualizer-Lively.zip
+
+  # Guard: download the artifact the way a person would and prove the manifest sits
+  # at its root. If this fails, the zip would not be recognised by Lively.
+  verify-package:
+    needs: build-lively
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: MusicVisualizer-Lively
+          path: unpacked
+
+      - name: Check layout
+        run: |
+          ls -la unpacked
+          test -f unpacked/LivelyInfo.json || { echo "LivelyInfo.json is not at the artifact root"; exit 1; }
+          test -f unpacked/index.html || { echo "index.html is not at the artifact root"; exit 1; }
+          echo "OK: LivelyInfo.json and index.html are at the root of the artifact."

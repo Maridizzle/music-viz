@@ -1,8 +1,10 @@
 // Lively Wallpaper (https://github.com/rocksdanister/lively) runs a web page as the
 // desktop background and pushes the PC's system audio into it by calling a global
 // `livelyAudioListener(audioArray)` on the page: a 128-entry array of decimals,
-// normally 0..1 (the docs warn it can exceed 1, so we clamp). It is enabled by
-// `"Arguments": "--audio"` in the wallpaper's LivelyInfo.json (see lively/).
+// normally 0..1 (the docs warn it can exceed 1, so we clamp). Lively starts its
+// analyser (NAudio WASAPI loopback → FFT → 128 linear bins) for wallpapers whose
+// LivelyInfo.json has `"Type": 2` (webaudio); no extra arguments are needed and
+// adding `--audio` there actually breaks launch (duplicate option). See lively/.
 //
 // This module registers that global and keeps the latest spectrum. The engine reads
 // it every frame instead of a Web Audio analyser, so no capture permission, no
